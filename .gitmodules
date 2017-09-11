@@ -1,0 +1,6 @@
+[submodule "lib/ddp"]
+	path = lib/ddp
+	url = https://github.com/grimmer0125/python-ddp
+[submodule "lib/meteor"]
+	path = lib/meteor
+	url = https://github.com/grimmer0125/python-meteor
