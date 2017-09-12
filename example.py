@@ -13,6 +13,7 @@ sefSessionID = None
 command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
 command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
 controllerID = None
+numberOfImages = 0
 
 def subscribed(subscription):
     print('* SUBSCRIBED {}'.format(subscription))
@@ -29,7 +30,8 @@ def remove_callback(error, data):
 
 def handleAddedOrChanged(collection, id, fields):
     for key, value in fields.items():
-        print('  - FIELD {} {}'.format(key, value))
+        print('  - FIELD {}'.format(key))
+        # print('  - FIELD {} {}'.format(key, value))
 
     if collection == "users":
         print("grimmer users added ")
@@ -42,13 +44,20 @@ def handleAddedOrChanged(collection, id, fields):
         if cmd == command_REGISTER_IMAGEVIEWER:
             print("response:REGISTER_IMAGEVIEWER")
             data = fields["data"] # save controllerID to use
+            # will send setSize inside 
             ImageController.parseReigsterViewResp(client, data)
 
         elif cmd == command_SELECT_FILE_TO_OPEN:
             print("response:SELECT_FILE_TO_OPEN, get image !!!!")
-            image = fields["buffer"]
-            print("image data size:", len(image))
-
+            if "buffer" in fields:
+                image = fields["buffer"]
+                global numberOfImages
+                numberOfImages += 1
+                print("image data size:", len(image))
+                if numberOfImages == 2:
+                    print("start to request testing image, aj.fits")
+                    ImageController.selectFileToOpen(client)
+                
         #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
         client.remove('responses', {'_id': id}, callback=remove_callback)
 
@@ -130,9 +139,9 @@ def getSession():
 
 def connected():
     print('* CONNECTED')
-    all_lists = client.find('tasks', selector={})
-    print('Tasks: {}'.format(all_lists))
-    print('Num lists: {}'.format(len(all_lists)))
+    # all_lists = client.find('tasks', selector={})
+    # print('Tasks: {}'.format(all_lists))
+    # print('Num lists: {}'.format(len(all_lists)))
     print('end connected, try login')
     client.login('grimmer4', "123456")
     print('setup collection')
