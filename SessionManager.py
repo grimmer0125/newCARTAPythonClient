@@ -2,10 +2,12 @@
 print("load import SessionManager, sessionid")
 
 selfSessionID = None
-otherSessionID = None
+otherSessionID = None #"B6bugxuJGmwcX3FPY" # for testing 
 
 def get():
     print("load sessionid", selfSessionID)
+    if otherSessionID != None:
+        return otherSessionID
     return selfSessionID
 
 def set(sessionID):
@@ -14,4 +16,6 @@ def set(sessionID):
     selfSessionID = sessionID
 
 def getSuitableSession():
+    if otherSessionID != None:
+        return otherSessionID
     return selfSessionID
