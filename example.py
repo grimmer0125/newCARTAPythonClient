@@ -1,5 +1,7 @@
 # https://github.com/hharnisc/python-meteor
 import time
+from datetime import datetime
+import base64
 
 from lib.meteor.MeteorClient import MeteorClient
 import SessionManager
@@ -48,12 +50,22 @@ def handleAddedOrChanged(collection, id, fields):
             ImageController.parseReigsterViewResp(client, data)
 
         elif cmd == command_SELECT_FILE_TO_OPEN:
-            print("response:SELECT_FILE_TO_OPEN, get image !!!!")
+            print("response:SELECT_FILE_TO_OPEN")
             if "buffer" in fields:
-                image = fields["buffer"]
+                print("get image !!!!")
+                imgString = fields["buffer"]
+                imageLeng = len(imgString)
+                print("image data size:", imageLeng)
+                currentTime = str(datetime.now())
+                print("currentTime:", currentTime)
+                if imageLeng > 10012:  
+                    print("try to save image")
+                    imgdata = base64.b64decode(imgString)
+                    filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
+                    with open(filename, 'wb') as f:
+                        f.write(imgdata)
                 global numberOfImages
                 numberOfImages += 1
-                print("image data size:", len(image))
                 if numberOfImages == 2:
                     print("start to request testing image, aj.fits")
                     ImageController.selectFileToOpen(client)
