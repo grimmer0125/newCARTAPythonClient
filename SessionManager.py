@@ -2,8 +2,9 @@
 print("load import SessionManager, sessionid")
 
 selfSessionID = None
-otherSessionID = None #"B6bugxuJGmwcX3FPY" # for testing 
+otherSessionID = None #"B6bugxuJGmwcX3FPY" # for testing
 
+# can be replaced by getSuitableSession totally 
 def get():
     print("load sessionid", selfSessionID)
     if otherSessionID != None:

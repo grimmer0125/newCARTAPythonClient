@@ -16,6 +16,7 @@ command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
 command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
 controllerID = None
 numberOfImages = 0
+GET_IMAGE = 'GET_IMAGE'
 
 def subscribed(subscription):
     print('* SUBSCRIBED {}'.format(subscription))
@@ -30,6 +31,46 @@ def remove_callback(error, data):
         return
     print(data)
 
+def insert_callback(error, data):
+    print("insert callback")
+    if error:
+        print(error)
+        return
+    print("insert callback ok")
+    # print(data)
+
+def update_callback(error, data):
+    print("update callback")
+    if error:
+        print(error)
+        return
+    print("udpate callback ok")
+    # print(data)
+
+# python client seems to have no Optimistic update on py-client https://www.meteor.com/tutorials/blaze/security-with-methods
+def saveDataToCollection(collection, newDocObject, actionType):
+    sessionID = SessionManager.getSuitableSession()
+    docs = client.find(collection, selector={'sessionID': sessionID})
+    if len(docs) > 0:
+        doc = docs[0]
+        # update
+        client.update(collection, doc, newDocObject, callback=update_callback)
+    else:
+        # insert
+        print("start to insert")
+        newDocObject["sessionID"] = sessionID
+        client.insert(collection, newDocObject, callback=insert_callback)
+        print("end to insert")
+
+        #     newDocObject.sessionID = sessionID;
+        #const docID = collection.insert(newDocObject);
+
+    # save to mongo , imagecontroller
+    # mongoUpsert(ImageController, { imageURL: url }, GET_IMAGE);
+    # const url = `data:image/jpeg;base64,${buffer}`;
+    # console.log('image url string size:', url.length);
+
+
 def handleAddedOrChanged(collection, id, fields):
     for key, value in fields.items():
         print('  - FIELD {}'.format(key))
@@ -38,7 +79,7 @@ def handleAddedOrChanged(collection, id, fields):
     if collection == "users":
         print("grimmer users added ")
     elif collection == "responses":
-        print("grimmer responses added, session:", fields["sessionID"])
+        print("grimmer responses added, self_sessionID:", fields["sessionID"])
 
         cmd = fields["cmd"]
 
@@ -46,7 +87,7 @@ def handleAddedOrChanged(collection, id, fields):
         if cmd == command_REGISTER_IMAGEVIEWER:
             print("response:REGISTER_IMAGEVIEWER")
             data = fields["data"] # save controllerID to use
-            # will send setSize inside 
+            # will send setSize inside
             ImageController.parseReigsterViewResp(client, data)
 
         elif cmd == command_SELECT_FILE_TO_OPEN:
@@ -58,18 +99,23 @@ def handleAddedOrChanged(collection, id, fields):
                 print("image data size:", imageLeng)
                 currentTime = str(datetime.now())
                 print("currentTime:", currentTime)
-                if imageLeng > 10012:  
+                if imageLeng > 10012:
                     print("try to save image")
+                    url = "data:image/jpeg;base64,"+imgString
+                    # save to mongo
+                    saveDataToCollection('imagecontroller', { "imageURL": url }, GET_IMAGE)
+                    # save file
                     imgdata = base64.b64decode(imgString)
                     filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
                     with open(filename, 'wb') as f:
                         f.write(imgdata)
+
                 global numberOfImages
                 numberOfImages += 1
                 if numberOfImages == 2:
                     print("start to request testing image, aj.fits")
                     ImageController.selectFileToOpen(client)
-                
+
         #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
         client.remove('responses', {'_id': id}, callback=remove_callback)
 
@@ -82,7 +128,6 @@ def added(collection, id, fields):
     handleAddedOrChanged(collection, id, fields)
     print('end added')
 
-        # 要把response刪掉嗎? 之前是下一次進來會用到舊的
 
 #  ADDED users vo5Eb7cG94waZmiGY
 #   - FIELD username grimmer4
@@ -184,23 +229,6 @@ getSession()
 # ctrl + c to kill the script
 while True:
     try:
-        time.sleep(1)
+        time.sleep(5)
     except KeyboardInterrupt:
         break
-
-# client.unsubscribe('publicLists')
-
-
-# todo:
-#     一開始 Meteor.call('getSessionId', (err, sessionID) => {
-#         存自己sessionid, print
-#         1 subscribe, command response 2 observe respone
-#         2, 3 其他兩個, filebrowser , 跟 imagecontroller
-
-# *跳過filebrowser的file list階段好了 -> 不知道如何呈現
-# image部份:
-#     1. 送 REGISTER_IMAGEVIEWER 得到 controller id
-#     2. 得到後set size
-# 之後就會得到command response: image的資料 !!!!
-
-# cmdAsyncList 真的是非blocking????
