@@ -50,7 +50,7 @@ def handleAddedOrChanged(collection, id, fields):
             print("image data size:", len(image))
 
         #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
-        client.remove('responses', {'sessionID': fields["sessionID"]}, callback=remove_callback)
+        client.remove('responses', {'_id': id}, callback=remove_callback)
 
     elif collection == "imagecontroller":
         print("grimmer imagecontroller added")
