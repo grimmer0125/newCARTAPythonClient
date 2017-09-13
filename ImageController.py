@@ -1,4 +1,5 @@
 import SessionManager
+import time
 
 controllerID = None
 
@@ -29,9 +30,29 @@ def parseReigsterViewResp(client, data):
     # });
 
 def selectFileToOpen(client):
-
+    time.sleep(10)
     path = "/Users/grimmer/CARTA/Images/aj.fits"
 
+    # controllerID = state.imageController.controllerID;
+    parameter = "id:"+controllerID+",data:"+path
+    print("query:", parameter)
+    # console.log('inject file parameter, become:', parameter);
+    #
+    # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession(), (error, result) => {
+    #   console.log('get select file result:', result);
+    # });
+    def selectFile_callback(error, result):
+        if error:
+            print(error)
+            return
+        print("in selectFile_callback")
+        print(result)
+
+    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession()], selectFile_callback)
+
+def selectFileToOpen2(client):
+    time.sleep(10)
+    path = "/Users/grimmer/CARTA/Images/a-verysmall.fits"
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path
     print("query:", parameter)

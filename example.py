@@ -17,6 +17,7 @@ command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
 controllerID = None
 numberOfImages = 0
 GET_IMAGE = 'GET_IMAGE'
+testimage = 0
 
 def subscribed(subscription):
     print('* SUBSCRIBED {}'.format(subscription))
@@ -61,13 +62,17 @@ def update_callback(error, data):
 def saveDataToCollection(collection, newDocObject, actionType):
     sessionID = SessionManager.getSuitableSession()
     docs = client.find(collection, selector={'sessionID': sessionID})
-    if len(docs) > 0:
+    total = len(docs)
+    if total > 0:
+        print("try to replace first image in mongo, total images:", total)
         doc = docs[0]
+        docID = doc["_id"]
+        newDocObject["sessionID"] = sessionID
         # update, not test yet
-        client.update(collection, doc, newDocObject, callback=update_callback)
+        client.update(collection, {'_id': docID}, newDocObject, callback=update_callback)
     else:
         # insert
-        print("start to insert")
+        print("try to to insert images")
         newDocObject["sessionID"] = sessionID
         client.insert(collection, newDocObject, callback=insert_callback)
         print("end to insert")
@@ -111,7 +116,7 @@ def handleAddedOrChanged(collection, id, fields):
                 if imageLeng > 10012:
                     url = "data:image/jpeg;base64,"+imgString
                     # save to mongo for share screen
-                    saveDataToCollection('imagecontroller', { "imageURL": url }, GET_IMAGE)
+                    saveDataToCollection('imagecontroller', { "imageURL": url, "size": len(url) }, GET_IMAGE)
                     #save file for testing
                     print("try to save image")
                     imgdata = base64.b64decode(imgString)
@@ -124,6 +129,8 @@ def handleAddedOrChanged(collection, id, fields):
                 if numberOfImages == 2:
                     print("start to request testing image, aj.fits")
                     ImageController.selectFileToOpen(client)
+            else:
+                print("dummy response of select file request")
 
         #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
         client.remove('responses', {'_id': id}, callback=remove_callback)
@@ -140,13 +147,19 @@ def handleAddedOrChanged(collection, id, fields):
                 docID = doc["_id"]
                 print("loop image collection, id is", docID)
                 print("image size:", len(doc["imageURL"]))
-                if currentID != id:
+                if docID != id:
                     print("remove it")
                     client.remove('imagecontroller', {'_id': docID}, callback=remove_image_callback)
+                    # global testimage
+                    # testimage +=1
+                    # if testimage ==1:
+                    #     print("try 2nd image file")
+                    #     ImageController.selectFileToOpen2(client)
+                    #
                     # doc["comments"] = "apple"
-                    # for testing client.update('imagecontroller', {'_id': currentID}, {"name": "ggg"}, callback=update_callback)
+                    # for testing client.update('imagecontroller', {'_id': docID}, {"name": "ggg"}, callback=update_callback)
                     # for testing
-                    # client.update('imagecontroller', {'_id': currentID}, doc, callback=update_callback)
+                    # client.update('imagecontroller', {'_id': docID}, doc, callback=update_callback)
                 else:
                     print("not remove it")
 
@@ -179,8 +192,8 @@ def added(collection, id, fields):
     # print('Num lists: {}'.format(len(all_lists)))
 
 def changed(collection, id, fields, cleared):
-    print('* CHANGED {} {}'.format(collection, id))
-    handleAddedOrChanged(collection, id, fields)
+    print('CHANGED !!!: {} {}'.format(collection, id))
+    # handleAddedOrChanged(collection, id, fields)
 
     # all_lists = client.find('tasks', selector={})
     # print('Tasks: {}'.format(all_lists))
