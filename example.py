@@ -31,12 +31,22 @@ def remove_callback(error, data):
         return
     print(data)
 
+def remove_image_callback(error, data):
+    print("in remove_image_callback")
+    if error:
+        print(error)
+        return
+    print("in remove_image_callback ok")
+    # print(data)
+
 def insert_callback(error, data):
     print("insert callback")
     if error:
         print(error)
         return
     print("insert callback ok")
+    # docs = client.find(collection, selector={'sessionID': sessionID})
+
     # print(data)
 
 def update_callback(error, data):
@@ -53,7 +63,7 @@ def saveDataToCollection(collection, newDocObject, actionType):
     docs = client.find(collection, selector={'sessionID': sessionID})
     if len(docs) > 0:
         doc = docs[0]
-        # update
+        # update, not test yet
         client.update(collection, doc, newDocObject, callback=update_callback)
     else:
         # insert
@@ -102,9 +112,9 @@ def handleAddedOrChanged(collection, id, fields):
                 if imageLeng > 10012:
                     print("try to save image")
                     url = "data:image/jpeg;base64,"+imgString
-                    # save to mongo
+                    # save to mongo for share screen
                     saveDataToCollection('imagecontroller', { "imageURL": url }, GET_IMAGE)
-                    # save file
+                    #save file for testing
                     imgdata = base64.b64decode(imgString)
                     filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
                     with open(filename, 'wb') as f:
@@ -121,6 +131,23 @@ def handleAddedOrChanged(collection, id, fields):
 
     elif collection == "imagecontroller":
         print("grimmer imagecontroller added")
+        sessionID = SessionManager.getSuitableSession()
+        docs = client.find(collection, selector={'sessionID': sessionID})
+        total = len(docs)
+        if total > 0:
+            print("total doc:",total)
+            firstDoc = docs[0]
+            x = 3
+            for doc in docs:
+                currentID = doc["_id"]
+                print("loop image collection, id is", currentID)
+                if currentID != id:
+                    print("remove it")
+                    client.remove('imagecontroller', {'_id': id}, callback=remove_image_callback)
+                else:
+                    print("not remove it")
+
+                    # delete previous images
 
 #TODO commmand response need to be deleted.
 def added(collection, id, fields):
