@@ -79,17 +79,16 @@ def saveDataToCollection(collection, newDocObject, actionType):
     # mongoUpsert(ImageController, { imageURL: url }, GET_IMAGE);
     # const url = `data:image/jpeg;base64,${buffer}`;
     # console.log('image url string size:', url.length);
-
-
+# fields are changed fields
 def handleAddedOrChanged(collection, id, fields):
     for key, value in fields.items():
         print('  - FIELD {}'.format(key))
         # print('  - FIELD {} {}'.format(key, value))
 
     if collection == "users":
-        print("grimmer users added ")
+        print("grimmer users added/changed ")
     elif collection == "responses":
-        print("grimmer responses added, self_sessionID:", fields["sessionID"])
+        print("grimmer responses added/changed, self_sessionID:", fields["sessionID"])
 
         cmd = fields["cmd"]
 
@@ -110,11 +109,11 @@ def handleAddedOrChanged(collection, id, fields):
                 currentTime = str(datetime.now())
                 print("currentTime:", currentTime)
                 if imageLeng > 10012:
-                    print("try to save image")
                     url = "data:image/jpeg;base64,"+imgString
                     # save to mongo for share screen
                     saveDataToCollection('imagecontroller', { "imageURL": url }, GET_IMAGE)
                     #save file for testing
+                    print("try to save image")
                     imgdata = base64.b64decode(imgString)
                     filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
                     with open(filename, 'wb') as f:
@@ -130,20 +129,24 @@ def handleAddedOrChanged(collection, id, fields):
         client.remove('responses', {'_id': id}, callback=remove_callback)
 
     elif collection == "imagecontroller":
-        print("grimmer imagecontroller added")
+        print("grimmer imagecontroller added/changed")
         sessionID = SessionManager.getSuitableSession()
         docs = client.find(collection, selector={'sessionID': sessionID})
         total = len(docs)
         if total > 0:
             print("total doc:",total)
             firstDoc = docs[0]
-            x = 3
             for doc in docs:
-                currentID = doc["_id"]
-                print("loop image collection, id is", currentID)
+                docID = doc["_id"]
+                print("loop image collection, id is", docID)
+                print("image size:", len(doc["imageURL"]))
                 if currentID != id:
                     print("remove it")
-                    client.remove('imagecontroller', {'_id': id}, callback=remove_image_callback)
+                    client.remove('imagecontroller', {'_id': docID}, callback=remove_image_callback)
+                    # doc["comments"] = "apple"
+                    # for testing client.update('imagecontroller', {'_id': currentID}, {"name": "ggg"}, callback=update_callback)
+                    # for testing
+                    # client.update('imagecontroller', {'_id': currentID}, doc, callback=update_callback)
                 else:
                     print("not remove it")
 
