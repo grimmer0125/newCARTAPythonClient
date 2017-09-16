@@ -2,6 +2,9 @@
 import time
 from datetime import datetime
 import base64
+import sys
+print(sys.version)
+print(sys.executable)
 
 from lib.meteor.MeteorClient import MeteorClient
 import SessionManager
