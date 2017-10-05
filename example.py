@@ -10,6 +10,11 @@ from lib.meteor.MeteorClient import MeteorClient
 import SessionManager
 import ImageController
 
+
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
+import io
+
 client = MeteorClient('ws://127.0.0.1:3000/websocket')
 
 ####  grimmer's experiment
@@ -126,6 +131,17 @@ def handleAddedOrChanged(collection, id, fields):
                     filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
                     with open(filename, 'wb') as f:
                         f.write(imgdata)
+
+                        # img = mpimg.imread('1.jpg'), from file
+
+                        i = io.BytesIO(imgdata)
+                        i = mpimg.imread(i, format='JPG') # from memory, binary
+
+                        # plt.imshow(i, interpolation='nearest')
+                        imgplot = plt.imshow(i)# may be no difference
+                        # plt.ion()
+                        # plt.show()
+                        plt.pause(0.01)
 
                 global numberOfImages
                 numberOfImages += 1
@@ -255,6 +271,13 @@ def removed(collection, id):
 def on_logged_in(data):
     print('LOGGIN IN', data)
 
+img = mpimg.imread('2.png')  #3s
+    # img = mpimg.imread('1.jpg') 3s
+
+imgplot = plt.imshow(img)
+plt.ion()
+plt.show()
+
 client.on('removed', removed)
 
 client.on('changed', changed)
@@ -273,8 +296,8 @@ getSession()
 
 # (sort of) hacky way to keep the client alive
 # ctrl + c to kill the script
-while True:
-    try:
-        time.sleep(5)
-    except KeyboardInterrupt:
-        break
+# while True:
+#     try:
+#         time.sleep(5)
+#     except KeyboardInterrupt:
+#         break
