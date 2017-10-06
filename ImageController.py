@@ -30,7 +30,7 @@ def parseReigsterViewResp(client, data):
     # });
 
 def selectFileToOpen(client):
-    time.sleep(10)
+    time.sleep(3) # 10 for testing sharing session between python and browser
     path = "/Users/grimmer/CARTA/Images/aj.fits"
 
     # controllerID = state.imageController.controllerID;
@@ -51,7 +51,7 @@ def selectFileToOpen(client):
     client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession()], selectFile_callback)
 
 def selectFileToOpen2(client):
-    time.sleep(10)
+    time.sleep(3)
     path = "/Users/grimmer/CARTA/Images/a-verysmall.fits"
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path

@@ -27,6 +27,27 @@ numberOfImages = 0
 GET_IMAGE = 'GET_IMAGE'
 testimage = 0
 
+# https://stackoverflow.com/a/39662359/7354486
+def isnotebook():
+    try:
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':
+            return True   # Jupyter notebook or qtconsole
+        elif shell == 'TerminalInteractiveShell':
+            return False  # Terminal running IPython
+        else:
+            return False  # Other type (?)
+    except NameError:
+        return False      # Probably standard Python interpreter
+
+# https://stackoverflow.com/a/5377051/7354486
+def run_from_ipython():
+    try:
+        __IPYTHON__
+        return True
+    except NameError:
+        return False
+
 def subscribed(subscription):
     print('* SUBSCRIBED {}'.format(subscription))
 
@@ -132,16 +153,16 @@ def handleAddedOrChanged(collection, id, fields):
                     with open(filename, 'wb') as f:
                         f.write(imgdata)
 
-                        # img = mpimg.imread('1.jpg'), from file
+                        if run_from_ipython():
+                            # img = mpimg.imread('1.jpg'), from file
+                            i = io.BytesIO(imgdata)
+                            i = mpimg.imread(i, format='JPG') # from memory, binary
 
-                        i = io.BytesIO(imgdata)
-                        i = mpimg.imread(i, format='JPG') # from memory, binary
-
-                        # plt.imshow(i, interpolation='nearest')
-                        imgplot = plt.imshow(i)# may be no difference
-                        # plt.ion()
-                        # plt.show()
-                        plt.pause(0.01)
+                            # plt.imshow(i, interpolation='nearest')
+                            imgplot = plt.imshow(i)# may be no difference
+                            plt.pause(0.01)
+                        else:
+                            print("not ipython, so do no show image after saving")
 
                 global numberOfImages
                 numberOfImages += 1
@@ -271,12 +292,23 @@ def removed(collection, id):
 def on_logged_in(data):
     print('LOGGIN IN', data)
 
-img = mpimg.imread('2.png')  #3s
-    # img = mpimg.imread('1.jpg') 3s
 
-imgplot = plt.imshow(img)
-plt.ion()
-plt.show()
+if run_from_ipython():
+    print("is ipython, setupt matplotlib")
+    plt.ion()
+    plt.figure()
+    plt.show()
+else:
+    print("not ipython")
+# sys.exit()
+
+
+# img = mpimg.imread('2.png')  #3s
+#     # img = mpimg.imread('1.jpg') 3s
+#
+# imgplot = plt.imshow(img)
+# plt.ion()
+# plt.show()=
 
 client.on('removed', removed)
 
