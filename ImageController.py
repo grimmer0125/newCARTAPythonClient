@@ -1,4 +1,6 @@
-import SessionManager
+#import SessionManager
+import sessionmanager as SessionManager
+
 import time
 
 controllerID = None
@@ -29,16 +31,16 @@ def parseReigsterViewResp(client, data):
     #     console.log('get setupViewSize dummy result:', result);
     # });
 
-def selectFileToOpen(client):
-    time.sleep(3) # 10 for testing sharing session between python and browser
-    path = "/Users/grimmer/CARTA/Images/aj.fits"
+def selectFileToOpen(client, file):
+    # time.sleep(10) # 10 for testing sharing session between python and browser
+    path = "/Users/grimmer/CARTA/Images/" + file
 
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path
     print("query:", parameter)
     # console.log('inject file parameter, become:', parameter);
     #
-    # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession(), (error, result) => {
+    # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session(), (error, result) => {
     #   console.log('get select file result:', result);
     # });
     def selectFile_callback(error, result):
@@ -48,17 +50,17 @@ def selectFileToOpen(client):
         print("in selectFile_callback")
         print(result)
 
-    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession()], selectFile_callback)
+    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session()], selectFile_callback)
 
 def selectFileToOpen2(client):
-    time.sleep(3)
+    time.sleep(10)
     path = "/Users/grimmer/CARTA/Images/a-verysmall.fits"
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path
     print("query:", parameter)
     # console.log('inject file parameter, become:', parameter);
     #
-    # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession(), (error, result) => {
+    # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session(), (error, result) => {
     #   console.log('get select file result:', result);
     # });
     def selectFile_callback(error, result):
@@ -68,7 +70,7 @@ def selectFileToOpen2(client):
         print("in selectFile_callback")
         print(result)
 
-    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.getSuitableSession()], selectFile_callback)
+    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session()], selectFile_callback)
 
 def sendRegiserView(client):
     print("sendRegiserView")
@@ -85,4 +87,4 @@ def sendRegiserView(client):
         print("in registerview_callback")
         print(result)
 
-    client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, SessionManager.getSuitableSession()], registerview_callback)
+    client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, SessionManager.get_suitable_session()], registerview_callback)
