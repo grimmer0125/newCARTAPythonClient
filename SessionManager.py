@@ -20,3 +20,6 @@ def get_suitable_session():
     if otherSessionID != None:
         return otherSessionID
     return selfSessionID
+
+def use_other_ession(sessionID):
+    otherSessionID = sessionID

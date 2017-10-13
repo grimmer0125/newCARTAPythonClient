@@ -1,14 +1,15 @@
 
 # import cartaclient as client
+import sessionmanager as SessionManager
 
 from client import Client
 # import client
 
 def main():
-    print("start cartaclient example")
+    print("start cartaclient + share session example")
+    SessionManager.use_other_ession("XnfRTJe3nAdDdxZaq")
     c=Client()
     c.start_connection()
-    c.request_file_show("aj.fits")
 
 if __name__ == '__main__':
     main()
