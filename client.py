@@ -55,8 +55,6 @@ def run_from_ipython():
     except NameError:
         return False
 
-
-
 # img = mpimg.imread('2.png')  #3s
 #     # img = mpimg.imread('1.jpg') 3s
 #
@@ -64,16 +62,17 @@ def run_from_ipython():
 # plt.ion()
 # plt.show()=
 
-
-
 # client.subscribe('publicLists')
 # getSession()
 # client.subscribe('tasks')
 
-
-# testtest = 1
+# will launch matplotlib
 class Client():
-    def __init__(self):
+    def __init__(self, session = None):
+        self.use_other_session = False
+        if session != None:
+            SessionManager.use_other_session(session)
+            self.use_other_session = True
         # print("test:{}".format(testtest))
         # self.sefSessionID = None
         # self.controllerID = None
@@ -82,20 +81,20 @@ class Client():
 
         self.numberOfImages = 0
         # self.testimage = 0
-
-    def start_connection(self):
         if isnotebook():
             print("is notebook")
         # import matplotlib
         # matplotlib.use('TkAgg')
         # sys.exit()
         if run_from_ipython():
-            print("is ipython, setupt matplotlib")
+            print("is ipython, setup matplotlib")
             plt.ion()
             plt.figure()
             plt.show()
         else:
             print("not ipython")
+
+    def start_connection(self):
         client.on('removed', self.removed)
         client.on('changed', self.changed)
         client.on('subscribed', self.subscribed)
@@ -109,7 +108,7 @@ class Client():
                 print("wait for connect resp")
                 # time.sleep(0.02)
                 resp = self.queue.get()
-                print("get resp:{}".format(resp))
+                print("get connect resp:{}".format(resp))
                 break
                 # check the queue
             except KeyboardInterrupt:
@@ -165,7 +164,7 @@ class Client():
 
     # python client seems to have no Optimistic update on py-client https://www.meteor.com/tutorials/blaze/security-with-methods
     def saveDataToCollection(self, collection, newDocObject, actionType):
-        sessionID = SessionManager.get_suitable_session()
+        sessionID = SessionManager.get()
         docs = client.find(collection, selector={'sessionID': sessionID})
         total = len(docs)
         if total > 0:
@@ -190,6 +189,28 @@ class Client():
         # const url = `data:image/jpeg;base64,${buffer}`;
         # console.log('image url string size:', url.length);
     # fields are changed fields
+
+    def render_received_image(self, imgString):
+        print("render_received_image")
+        print("try to save image")
+        currentTime = str(datetime.now())
+        print("currentTime:", currentTime)
+        imgdata = base64.b64decode(imgString)
+        filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
+        with open(filename, 'wb') as f:
+            f.write(imgdata)
+
+            if run_from_ipython():
+                # img = mpimg.imread('1.jpg'), from file
+                i = io.BytesIO(imgdata)
+                i = mpimg.imread(i, format='JPG') # from memory, binary
+
+                # plt.imshow(i, interpolation='nearest')
+                #TODO let mainthread to redraw
+                imgplot = plt.imshow(i)# may be no difference
+                plt.pause(0.01)
+            else:
+                print("not ipython, so do no show image after saving")
     def handleAddedOrChanged(self, collection, id, fields):
         for key, value in fields.items():
             print('  - FIELD {}'.format(key))
@@ -208,38 +229,40 @@ class Client():
                 data = fields["data"] # save controllerID to use
                 # will send setSize inside
                 ImageController.parseReigsterViewResp(client, data)
-
             elif cmd == command_SELECT_FILE_TO_OPEN:
                 print("response:SELECT_FILE_TO_OPEN")
                 if "buffer" in fields:
                     print("get image !!!!")
                     imgString = fields["buffer"]
                     imageLeng = len(imgString)
-                    print("image data size:", imageLeng)
-                    currentTime = str(datetime.now())
-                    print("currentTime:", currentTime)
+                    print("image data size in command response:", imageLeng)
+
+                    #TODO the dummy empty images should be solved in the future, but now we use it to judge connect ok
                     if imageLeng > 10012:
-                        url = "data:image/jpeg;base64,"+imgString
+                        # url = "data:image/jpeg;base64,"+imgString
                         # save to mongo for share screen
-                        self.saveDataToCollection('imagecontroller', { "imageURL": url, "size": len(url) }, GET_IMAGE)
+                        #TODO python: forget to setup controllerID. js: forget to add size
+                        self.saveDataToCollection('imagecontroller', { "imageURL": imgString, "size": len(imgString) }, GET_IMAGE)
                         #save file for testing
-                        print("try to save image")
-                        imgdata = base64.b64decode(imgString)
-                        filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
-                        with open(filename, 'wb') as f:
-                            f.write(imgdata)
+                        # print("try to save image")
+                        # self.render_received_image(imgString)
 
-                            if run_from_ipython():
-                                # img = mpimg.imread('1.jpg'), from file
-                                i = io.BytesIO(imgdata)
-                                i = mpimg.imread(i, format='JPG') # from memory, binary
-
-                                # plt.imshow(i, interpolation='nearest')
-                                #TODO let mainthread to redraw
-                                imgplot = plt.imshow(i)# may be no difference
-                                plt.pause(0.01)
-                            else:
-                                print("not ipython, so do no show image after saving")
+                        # imgdata = base64.b64decode(imgString)
+                        # filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
+                        # with open(filename, 'wb') as f:
+                        #     f.write(imgdata)
+                        #
+                        #     if run_from_ipython():
+                        #         # img = mpimg.imread('1.jpg'), from file
+                        #         i = io.BytesIO(imgdata)
+                        #         i = mpimg.imread(i, format='JPG') # from memory, binary
+                        #
+                        #         # plt.imshow(i, interpolation='nearest')
+                        #         #TODO let mainthread to redraw
+                        #         imgplot = plt.imshow(i)# may be no difference
+                        #         plt.pause(0.01)
+                        #     else:
+                        #         print("not ipython, so do no show image after saving")
 
                     # global numberOfImages
                     self.numberOfImages += 1
@@ -254,18 +277,18 @@ class Client():
 
         elif collection == "imagecontroller":
             print("grimmer imagecontroller added/changed")
-            sessionID = SessionManager.get_suitable_session()
+            sessionID = SessionManager.get()
             docs = client.find(collection, selector={'sessionID': sessionID})
             total = len(docs)
             if total > 0:
                 print("total doc:",total)
-                firstDoc = docs[0]
+                # firstDoc = docs[0]
                 for doc in docs:
                     docID = doc["_id"]
                     print("loop image collection, id is", docID)
-                    print("image size:", len(doc["imageURL"]))
+                    #NOTE since meteor-python does not have Optimistic update so that we need to remove old images after getting added/changed callback
                     if docID != id:
-                        print("remove it")
+                        print("remove one image document")
                         client.remove('imagecontroller', {'_id': docID}, callback=self.remove_image_callback)
                         # global testimage
                         # testimage +=1
@@ -279,6 +302,8 @@ class Client():
                         # client.update('imagecontroller', {'_id': docID}, doc, callback=update_callback)
                     else:
                         print("not remove it")
+                        print("image size in collection:", len(doc["imageURL"]))
+                        self.render_received_image(doc["imageURL"])
 
                         # delete previous images
 
@@ -310,7 +335,7 @@ class Client():
 
     def changed(self, collection, id, fields, cleared):
         print('CHANGED !!!: {} {}'.format(collection, id))
-        # handleAddedOrChanged(collection, id, fields)
+        handleAddedOrChanged(collection, id, fields) # only take effect when JS changes rendered image
 
         # all_lists = client.find('tasks', selector={})
         # print('Tasks: {}'.format(all_lists))
@@ -333,21 +358,29 @@ class Client():
             print("sub2 fail")
             print(error)
         print("sub image ok2")
-        ImageController.sendRegiserView(client)
+        if self.use_other_session == False:
+            ImageController.sendRegiserView(client)
 
+    def setup_subscription(self):
+        print("get:", SessionManager.get())
+
+        if self.use_other_session == False:
+            client.subscribe('commandResponse', [SessionManager.get()], callback=self.subscription_response_callback)
+
+        client.subscribe('imagecontroller', [SessionManager.get()], callback=self.subscription_image_callback)
     def getSession_callback(self, error, result):
         if error:
+            print("getSession_callback error")
             print(error)
             return
         print("in getSession_callback")
         print(result)
-        SessionManager.set(result)
-        print("get:", SessionManager.get())
-        client.subscribe('commandResponse', [SessionManager.get()], callback=self.subscription_response_callback)
-        client.subscribe('imagecontroller', [SessionManager.get()], callback=self.subscription_image_callback)
+        if self.use_other_session == False:
+            SessionManager.set(result)
         # subscribe response
         # subscribe imageController
         # observe response, imageController
+        self.setup_subscription()
 
     def getSession(self):
         print("try getSession")
@@ -361,10 +394,14 @@ class Client():
         # all_lists = client.find('tasks', selector={})
         # print('Tasks: {}'.format(all_lists))
         # print('Num lists: {}'.format(len(all_lists)))
-        self.getSession()
+        if self.use_other_session == False:
+            print('setup subscribe collection in session callback')
+            self.getSession()
+        else:
+            self.setup_subscription()
+            self.queue.put(connect_response)
         print('end connected, try login')
         client.login('grimmer4', "123456")
-        print('setup collection')
 
     def removed(self, collection, id):
         print('* REMOVED {} {}'.format(collection, id))

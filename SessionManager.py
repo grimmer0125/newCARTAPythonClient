@@ -6,9 +6,12 @@ otherSessionID = None #"B6bugxuJGmwcX3FPY" # for testing
 
 # can be replaced by get_suitable_session totally
 def get():
-    print("load sessionid", selfSessionID)
+    print("get session")
     if otherSessionID != None:
+        print("load other sessionid", otherSessionID)
         return otherSessionID
+    else:
+        print("load self sessionid", selfSessionID)
     return selfSessionID
 
 def set(sessionID):
@@ -16,10 +19,14 @@ def set(sessionID):
     print("setupt sessionid")
     selfSessionID = sessionID
 
-def get_suitable_session():
-    if otherSessionID != None:
-        return otherSessionID
-    return selfSessionID
+# def get_suitable_session():
+#     print("get suitable session")
+#     if otherSessionID != None:
+#         print("load other sessionid", otherSessionID)
+#         return otherSessionID
+#     print("load self sessionid", selfSessionID)
+#     return selfSessionID
 
-def use_other_ession(sessionID):
+def use_other_session(sessionID):
+    global otherSessionID
     otherSessionID = sessionID

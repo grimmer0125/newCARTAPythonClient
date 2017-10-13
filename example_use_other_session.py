@@ -7,8 +7,7 @@ from client import Client
 
 def main():
     print("start cartaclient + share session example")
-    SessionManager.use_other_ession("XnfRTJe3nAdDdxZaq")
-    c=Client()
+    c=Client("pCyqv6cnGfiH7NWZY")
     c.start_connection()
 
 if __name__ == '__main__':

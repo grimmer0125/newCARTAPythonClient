@@ -56,7 +56,7 @@ def selectFileToOpen(client, file):
         print("in selectFile_callback")
         print(result)
 
-    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session()], selectFile_callback)
+    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get()], selectFile_callback)
 
 def selectFileToOpen2(client):
     time.sleep(10)
@@ -77,7 +77,7 @@ def selectFileToOpen2(client):
         print("in selectFile_callback")
         print(result)
 
-    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session()], selectFile_callback)
+    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get()], selectFile_callback)
 
 def sendRegiserView(client):
     print("sendRegiserView")
@@ -94,4 +94,4 @@ def sendRegiserView(client):
         print("in registerview_callback")
         print(result)
 
-    client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, SessionManager.get_suitable_session()], registerview_callback)
+    client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, SessionManager.get()], registerview_callback)
