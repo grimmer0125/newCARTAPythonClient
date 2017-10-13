@@ -1,4 +1,14 @@
 # https://github.com/hharnisc/python-meteor
+
+import sys
+is_py2 = sys.version[0] == '2'
+if is_py2:
+    print("use python 2")
+    import Queue as queue
+else:
+    print("use python 3")
+    import queue as queue
+
 import time
 from datetime import datetime
 import base64
@@ -13,9 +23,6 @@ import imagecontroller as ImageController
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import io
-
-import queue
-
 
 client = MeteorClient('ws://127.0.0.1:3000/websocket')
 
