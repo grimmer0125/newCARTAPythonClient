@@ -19,7 +19,7 @@ print(sys.executable)
 from lib.meteor.MeteorClient import MeteorClient
 import sessionmanager as SessionManager
 import imagecontroller as ImageController
-
+import filebrowser as FileBrowser
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import io
@@ -31,6 +31,7 @@ client = MeteorClient('ws://127.0.0.1:3000/websocket')
 getSessionCmd = "getSessionId"
 command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
 command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
+command_REQUEST_FILE_LIST = '/CartaObjects/DataLoader:getData'
 GET_IMAGE = 'GET_IMAGE'
 connect_response = "connect_response"
 
@@ -119,6 +120,19 @@ class Client():
     #
     # def request_file_list(self):
     #     #TODO:
+
+    def requset_file_list(self):
+        FileBrowser.queryServerFileList(client)
+        while True:
+            try:
+                print("wait for request file resp")
+                # time.sleep(0.02)
+                resp = self.queue.get()
+                print("get request file resp:{}".format(resp))
+                break
+                # check the queue
+            except KeyboardInterrupt:
+                break
 
     def request_file_show(self, file):
         ImageController.selectFileToOpen(client, file)
@@ -222,6 +236,7 @@ class Client():
             print("grimmer responses added/changed, self_sessionID:", fields["sessionID"])
 
             cmd = fields["cmd"]
+            print("cmd respone:{}".format(cmd))
 
             #1. TODO handle it
             if cmd == command_REGISTER_IMAGEVIEWER:
@@ -229,6 +244,14 @@ class Client():
                 data = fields["data"] # save controllerID to use
                 # will send setSize inside
                 ImageController.parseReigsterViewResp(client, data)
+            elif cmd == command_REQUEST_FILE_LIST:
+                print("response:REQUEST_FILE_LIST:")
+                data = fields["data"]
+                files = data["dir"]
+                rootDir= data["name"]
+                print("files:{};dir:{}".format(files, rootDir))
+                print("response:REQUEST_FILE_LIST end")
+                self.queue.put("get file list resp")
             elif cmd == command_SELECT_FILE_TO_OPEN:
                 print("response:SELECT_FILE_TO_OPEN")
                 if "buffer" in fields:
