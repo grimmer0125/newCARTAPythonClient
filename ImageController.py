@@ -3,6 +3,9 @@ import sessionmanager as SessionManager
 
 import time
 
+from os.path import expanduser
+
+
 controllerID = None
 
 command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
@@ -33,7 +36,10 @@ def parseReigsterViewResp(client, data):
 
 def selectFileToOpen(client, file):
     # time.sleep(10) # 10 for testing sharing session between python and browser
-    path = "/Users/grimmer/CARTA/Images/" + file
+
+    home = expanduser("~")
+    # print(home)
+    path = home + "/CARTA/Images/" + file
 
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path
@@ -54,6 +60,7 @@ def selectFileToOpen(client, file):
 
 def selectFileToOpen2(client):
     time.sleep(10)
+
     path = "/Users/grimmer/CARTA/Images/a-verysmall.fits"
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path
