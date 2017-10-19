@@ -43,35 +43,6 @@ else:
     import queue as queue
     from tkinter import *
 
-## TODO change to image_q
-def update_debug_plot(q):
-    try:       #Try to check if there is data in the queue
-        # print("start to polling image data")
-        result=q.get_nowait()
-
-        if result !='Q':
-            print("get image data in queue")
-            #print result
-
-            import matplotlib
-            import matplotlib.pyplot as plt
-            import matplotlib.image as mpimg
-
-            imgplot = plt.imshow(result)# may be no difference
-            print("get image data in queue2")
-            plt.pause(0.01)
-            print("get image data in queue3")
-
-            #  line.set_ydata([1,result,10])
-            #  ax.draw_artist(line)
-            canvas.draw()
-            window.after(200,update_debug_plot,q)
-        else:
-            print('no queue done')
-    except:
-        # print("empty")
-        window.after(200,update_debug_plot,q)
-
 def run_test():
     from client import Client
     # in another thread/process to test
@@ -109,9 +80,6 @@ def main():
         # matplotlib.use('TkAgg')
         from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
-
-
-
         # ref:
         # https://stackoverflow.com/questions/34764535/why-cant-matplotlib-plot-in-a-different-thread
         # https://hardsoftlucid.wordpress.com/various-stuff/realtime-plotting/
@@ -136,6 +104,35 @@ def main():
             # plt.show() //some problems
             # canvas.draw()
             print("got it")
+
+        ## TODO change to image_q
+        def update_debug_plot(q):
+            try:  # Try to check if there is data in the queue
+                # print("start to polling image data")
+                result = q.get_nowait()
+
+                if result != 'Q':
+                    print("get image data in queue")
+                    # print result
+
+                    # import matplotlib
+                    # import matplotlib.pyplot as plt
+                    # import matplotlib.image as mpimg
+
+                    imgplot = plt.imshow(result)  # may be no difference
+                    print("get image data in queue2")
+                    plt.pause(0.01)
+                    print("get image data in queue3")
+
+                    #  line.set_ydata([1,result,10])
+                    #  ax.draw_artist(line)
+                    # canvas.draw()
+                    window.after(200, update_debug_plot, q)
+                else:
+                    print('no queue done')
+            except:
+                # print("empty")
+                window.after(200, update_debug_plot, q)
 
         image_q = queue.Queue()
         run_test()
