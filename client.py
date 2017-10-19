@@ -17,14 +17,15 @@ print(sys.version)
 print(sys.executable)
 
 from lib.meteor.MeteorClient import MeteorClient
-import sessionmanager as SessionManager
+# import sessionmanager as SessionManager
+from sessionmanager import SessionManager
 import imagecontroller as ImageController
 import filebrowser as FileBrowser
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import io
 
-client = MeteorClient('ws://127.0.0.1:3000/websocket')
+
 
 
 ####  grimmer's experiment
@@ -70,9 +71,12 @@ def run_from_ipython():
 # will launch matplotlib
 class Client():
     def __init__(self, session = None):
+        self.m_client = MeteorClient('ws://127.0.0.1:3000/websocket')
+        self.controllerID = None
         self.use_other_session = False
+        self.session_manager = SessionManager()
         if session != None:
-            SessionManager.use_other_session(session)
+            self.session_manager.use_other_session(session)
             self.use_other_session = True
         # print("test:{}".format(testtest))
         # self.sefSessionID = None
@@ -96,14 +100,14 @@ class Client():
             print("not ipython")
 
     def start_connection(self):
-        client.on('removed', self.removed)
-        client.on('changed', self.changed)
-        client.on('subscribed', self.subscribed)
-        client.on('unsubscribed', self.unsubscribed)
-        client.on('added', self.added)
-        client.on('connected', self.connected)
-        client.on('logged_in', self.on_logged_in)
-        client.connect()
+        self.m_client.on('removed', self.removed)
+        self.m_client.on('changed', self.changed)
+        self.m_client.on('subscribed', self.subscribed)
+        self.m_client.on('unsubscribed', self.unsubscribed)
+        self.m_client.on('added', self.added)
+        self.m_client.on('connected', self.connected)
+        self.m_client.on('logged_in', self.on_logged_in)
+        self.m_client.connect()
         while True:
             try:
                 print("wait for connect resp")
@@ -122,7 +126,7 @@ class Client():
     #     #TODO:
 
     def requset_file_list(self):
-        FileBrowser.queryServerFileList(client)
+        FileBrowser.queryServerFileList(self.session_manager.get(), self.m_client)
         while True:
             try:
                 print("wait for request file resp")
@@ -135,7 +139,7 @@ class Client():
                 break
 
     def request_file_show(self, file):
-        ImageController.selectFileToOpen(client, file)
+        ImageController.selectFileToOpen(self.session_manager.get(), self.m_client, self.controllerID, file)
 
     def subscribed(self, subscription):
         print('* SUBSCRIBED {}'.format(subscription))
@@ -178,8 +182,8 @@ class Client():
 
     # python client seems to have no Optimistic update on py-client https://www.meteor.com/tutorials/blaze/security-with-methods
     def saveDataToCollection(self, collection, newDocObject, actionType):
-        sessionID = SessionManager.get()
-        docs = client.find(collection, selector={'sessionID': sessionID})
+        sessionID = self.session_manager.get()
+        docs = self.m_client.find(collection, selector={'sessionID': sessionID})
         total = len(docs)
         if total > 0:
             print("try to replace first image in mongo, total images:", total)
@@ -187,12 +191,12 @@ class Client():
             docID = doc["_id"]
             newDocObject["sessionID"] = sessionID
             # update, not test yet
-            client.update(collection, {'_id': docID}, newDocObject, callback=self.update_callback)
+            self.m_client.update(collection, {'_id': docID}, newDocObject, callback=self.update_callback)
         else:
             # insert
             print("try to to insert images")
             newDocObject["sessionID"] = sessionID
-            client.insert(collection, newDocObject, callback=self.insert_callback)
+            self.m_client.insert(collection, newDocObject, callback=self.insert_callback)
             print("end to insert")
 
             #     newDocObject.sessionID = sessionID;
@@ -243,7 +247,8 @@ class Client():
                 print("response:REGISTER_IMAGEVIEWER")
                 data = fields["data"] # save controllerID to use
                 # will send setSize inside
-                ImageController.parseReigsterViewResp(client, data)
+                self.controllerID = data
+                ImageController.parseReigsterViewResp(self.m_client, data)
             elif cmd == command_REQUEST_FILE_LIST:
                 print("response:REQUEST_FILE_LIST:")
                 data = fields["data"]
@@ -296,12 +301,12 @@ class Client():
                     print("dummy response of select file request")
 
             #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
-            client.remove('responses', {'_id': id}, callback=self.remove_callback)
+            self.m_client.remove('responses', {'_id': id}, callback=self.remove_callback)
 
         elif collection == "imagecontroller":
             print("grimmer imagecontroller added/changed")
-            sessionID = SessionManager.get()
-            docs = client.find(collection, selector={'sessionID': sessionID})
+            sessionID = self.session_manager.get()
+            docs = self.m_client.find(collection, selector={'sessionID': sessionID})
             total = len(docs)
             if total > 0:
                 print("total doc:",total)
@@ -312,7 +317,7 @@ class Client():
                     #NOTE since meteor-python does not have Optimistic update so that we need to remove old images after getting added/changed callback
                     if docID != id:
                         print("remove one image document")
-                        client.remove('imagecontroller', {'_id': docID}, callback=self.remove_image_callback)
+                        self.m_client.remove('imagecontroller', {'_id': docID}, callback=self.remove_image_callback)
                         # global testimage
                         # testimage +=1
                         # if testimage ==1:
@@ -382,15 +387,15 @@ class Client():
             print(error)
         print("sub image ok2")
         if self.use_other_session == False:
-            ImageController.sendRegiserView(client)
+            ImageController.sendRegiserView(self.session_manager.get(), self.m_client)
 
     def setup_subscription(self):
-        print("get:", SessionManager.get())
+        print("get:", self.session_manager.get())
 
         if self.use_other_session == False:
-            client.subscribe('commandResponse', [SessionManager.get()], callback=self.subscription_response_callback)
+            self.m_client.subscribe('commandResponse', [self.session_manager.get()], callback=self.subscription_response_callback)
 
-        client.subscribe('imagecontroller', [SessionManager.get()], callback=self.subscription_image_callback)
+        self.m_client.subscribe('imagecontroller', [self.session_manager.get()], callback=self.subscription_image_callback)
     def getSession_callback(self, error, result):
         if error:
             print("getSession_callback error")
@@ -399,7 +404,7 @@ class Client():
         print("in getSession_callback")
         print(result)
         if self.use_other_session == False:
-            SessionManager.set(result)
+            self.session_manager.set(result)
         # subscribe response
         # subscribe imageController
         # observe response, imageController
@@ -410,7 +415,7 @@ class Client():
         print("setupt subscription callback")
 
         # empty params, so []
-        client.call(getSessionCmd, [], self.getSession_callback)
+        self.m_client.call(getSessionCmd, [], self.getSession_callback)
 
     def connected(self):
         print('* CONNECTED')
@@ -424,7 +429,7 @@ class Client():
             self.setup_subscription()
             self.queue.put(connect_response)
         print('end connected, try login')
-        client.login('grimmer4', "123456")
+        self.m_client.login('grimmer4', "123456")
 
     def removed(self, collection, id):
         print('* REMOVED {} {}'.format(collection, id))

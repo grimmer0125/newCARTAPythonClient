@@ -5,8 +5,7 @@ import time
 
 from os.path import expanduser
 
-
-controllerID = None
+# controllerID = None
 
 command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
 command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
@@ -23,9 +22,9 @@ def setSizeCallback(error, result) :
 
 def parseReigsterViewResp(client, data):
     print("parseReigsterViewResp, try to send setupt size")
-    global controllerID
-    controllerID = data
-    viewName = controllerID+"/view"
+    # global controllerID
+    # controllerID = data
+    viewName = data+"/view"
     width = 637 #// TODO same as the experimental setting in ImageViewer, change later
     height = 677
     client.call(setSizeCmd, [viewName, width, height,], setSizeCallback)
@@ -34,7 +33,7 @@ def parseReigsterViewResp(client, data):
     #     console.log('get setupViewSize dummy result:', result);
     # });
 
-def selectFileToOpen(client, file):
+def selectFileToOpen(session, client, controllerID, file):
     # time.sleep(10) # 10 for testing sharing session between python and browser
 
     home = expanduser("~")
@@ -56,30 +55,31 @@ def selectFileToOpen(client, file):
         print("in selectFile_callback")
         print(result)
 
-    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get()], selectFile_callback)
+    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, session], selectFile_callback)
 
-def selectFileToOpen2(client):
-    time.sleep(10)
+# for testing
+# def selectFileToOpen2(session, client):
+#     time.sleep(10)
+#
+#     path = "/Users/grimmer/CARTA/Images/a-verysmall.fits"
+#     # controllerID = state.imageController.controllerID;
+#     parameter = "id:"+controllerID+",data:"+path
+#     print("query:", parameter)
+#     # console.log('inject file parameter, become:', parameter);
+#     #
+#     # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session(), (error, result) => {
+#     #   console.log('get select file result:', result);
+#     # });
+#     def selectFile_callback(error, result):
+#         if error:
+#             print(error)
+#             return
+#         print("in selectFile_callback")
+#         print(result)
+#
+#     client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, session], selectFile_callback)
 
-    path = "/Users/grimmer/CARTA/Images/a-verysmall.fits"
-    # controllerID = state.imageController.controllerID;
-    parameter = "id:"+controllerID+",data:"+path
-    print("query:", parameter)
-    # console.log('inject file parameter, become:', parameter);
-    #
-    # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session(), (error, result) => {
-    #   console.log('get select file result:', result);
-    # });
-    def selectFile_callback(error, result):
-        if error:
-            print(error)
-            return
-        print("in selectFile_callback")
-        print(result)
-
-    client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, SessionManager.get()], selectFile_callback)
-
-def sendRegiserView(client):
+def sendRegiserView(session, meteor_client):
     print("sendRegiserView")
     # cmd = '/CartaObjects/ViewManager:registerView'
     # const cmd = Commands.REGISTER_IMAGEVIEWER; // '/CartaObjects/ViewManager:registerView';
@@ -94,4 +94,4 @@ def sendRegiserView(client):
         print("in registerview_callback")
         print(result)
 
-    client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, SessionManager.get()], registerview_callback)
+    meteor_client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, session], registerview_callback)
