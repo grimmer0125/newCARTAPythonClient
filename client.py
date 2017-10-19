@@ -81,7 +81,7 @@ class Client():
         # matplotlib.use('TkAgg')
         # sys.exit()
 
-        if run_from_ipython():
+        if run_from_interactive():
             print("is ipython, setup matplotlib")
             plt.ion()
             plt.figure()
@@ -221,7 +221,7 @@ class Client():
         i = io.BytesIO(imgdata)
         i = mpimg.imread(i, format='JPG')  # from memory, binary
 
-        if run_from_ipython():
+        if run_from_interactive():
             # plt.imshow(i, interpolation='nearest')
             imgplot = plt.imshow(i)# may be no difference
             plt.pause(0.01)
@@ -279,7 +279,7 @@ class Client():
                         # with open(filename, 'wb') as f:
                         #     f.write(imgdata)
                         #
-                        #     if run_from_ipython():
+                        #     if run_from_interactive():
                         #         # img = mpimg.imread('1.jpg'), from file
                         #         i = io.BytesIO(imgdata)
                         #         i = mpimg.imread(i, format='JPG') # from memory, binary

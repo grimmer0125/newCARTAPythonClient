@@ -1,3 +1,5 @@
+import __main__ as main
+print(hasattr(main, '__file__'))
 
 from helper import *
 
@@ -66,7 +68,7 @@ def main():
     # w.pack()
     # window = Tk()
     # window.mainloop()
-    if run_from_ipython() == FALSE:
+    if run_from_interactive() == FALSE:
         print("in python program mode, create tk window to debug")
         global window
         window = Tk() # should executed before importing matplotlib
@@ -126,7 +128,7 @@ def main():
 
                     #  line.set_ydata([1,result,10])
                     #  ax.draw_artist(line)
-                    # canvas.draw()
+                    canvas.draw()
                     window.after(200, update_debug_plot, q)
                 else:
                     print('no queue done')
@@ -148,7 +150,7 @@ def main():
         window.mainloop()
         print('Done')
     else:
-        print('in ipython')
+        print('in interactive python interpreter')
         run_test()
 
 if __name__ == '__main__':
