@@ -1,6 +1,3 @@
-import __main__ as main
-print(hasattr(main, '__file__'))
-
 from helper import *
 
 from threading import Timer
@@ -123,7 +120,7 @@ def main():
 
                     imgplot = plt.imshow(result)  # may be no difference
                     print("get image data in queue2")
-                    plt.pause(0.01)
+                    # plt.pause(0.01)
                     print("get image data in queue3")
 
                     #  line.set_ydata([1,result,10])
