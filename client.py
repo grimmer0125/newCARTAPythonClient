@@ -5,9 +5,11 @@ is_py2 = sys.version[0] == '2'
 if is_py2:
     print("use python 2")
     import Queue as queue
+    # from Tkinter import *
 else:
     print("use python 3")
     import queue as queue
+    # from tkinter import *
 
 import time
 from datetime import datetime
@@ -23,10 +25,15 @@ import imagecontroller as ImageController
 import filebrowser as FileBrowser
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
+import matplotlib
 import io
+from helper import *
+
+print("load client.py start")
 
 
-
+# window = None
+# window=Tk()
 
 ####  grimmer's experiment
 getSessionCmd = "getSessionId"
@@ -35,27 +42,6 @@ command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
 command_REQUEST_FILE_LIST = '/CartaObjects/DataLoader:getData'
 GET_IMAGE = 'GET_IMAGE'
 connect_response = "connect_response"
-
-# https://stackoverflow.com/a/39662359/7354486
-def isnotebook():
-    try:
-        shell = get_ipython().__class__.__name__
-        if shell == 'ZMQInteractiveShell':
-            return True   # Jupyter notebook or qtconsole
-        elif shell == 'TerminalInteractiveShell':
-            return False  # Terminal running IPython
-        else:
-            return False  # Other type (?)
-    except NameError:
-        return False      # Probably standard Python interpreter
-
-# https://stackoverflow.com/a/5377051/7354486
-def run_from_ipython():
-    try:
-        __IPYTHON__
-        return True
-    except NameError:
-        return False
 
 # img = mpimg.imread('2.png')  #3s
 #     # img = mpimg.imread('1.jpg') 3s
@@ -85,12 +71,16 @@ class Client():
         self.queue = queue.Queue()
 
         self.numberOfImages = 0
+        self.debug_image_queue = None
         # self.testimage = 0
-        if isnotebook():
-            print("is notebook")
+
+        # if isnotebook():
+        #     print("is notebook")
+
         # import matplotlib
         # matplotlib.use('TkAgg')
         # sys.exit()
+
         if run_from_ipython():
             print("is ipython, setup matplotlib")
             plt.ion()
@@ -98,6 +88,12 @@ class Client():
             plt.show()
         else:
             print("not ipython")
+            # matplotlib.use('TkAgg')
+            # self.window = Tk()
+            # self.window.mainloop()
+
+    def setup_debug_image_queue(self, queue):
+        self.debug_image_queue = queue
 
     def start_connection(self):
         self.m_client.on('removed', self.removed)
@@ -210,25 +206,28 @@ class Client():
 
     def render_received_image(self, imgString):
         print("render_received_image")
-        print("try to save image")
-        currentTime = str(datetime.now())
-        print("currentTime:", currentTime)
+
         imgdata = base64.b64decode(imgString)
-        filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
-        with open(filename, 'wb') as f:
-            f.write(imgdata)
 
-            if run_from_ipython():
-                # img = mpimg.imread('1.jpg'), from file
-                i = io.BytesIO(imgdata)
-                i = mpimg.imread(i, format='JPG') # from memory, binary
+        # NOTE: since we have tk+matplotlib for debugging, so no more saving images to files
+        # print("try to save image")
+        # currentTime = str(datetime.now())
+        # print("currentTime:", currentTime)
+        # filename = currentTime +".jpg"
+        # with open(filename, 'wb') as f:
+        #     f.write(imgdata)
+        # print("end to save image")
 
-                # plt.imshow(i, interpolation='nearest')
-                #TODO let mainthread to redraw
-                imgplot = plt.imshow(i)# may be no difference
-                plt.pause(0.01)
-            else:
-                print("not ipython, so do no show image after saving")
+        i = io.BytesIO(imgdata)
+        i = mpimg.imread(i, format='JPG')  # from memory, binary
+
+        if run_from_ipython():
+            # plt.imshow(i, interpolation='nearest')
+            imgplot = plt.imshow(i)# may be no difference
+            plt.pause(0.01)
+        else:
+            print("not ipython, so do no show image after saving")
+            self.debug_image_queue.put(i)
     def handleAddedOrChanged(self, collection, id, fields):
         for key, value in fields.items():
             print('  - FIELD {}'.format(key))
@@ -437,6 +436,7 @@ class Client():
     def on_logged_in(self, data):
         print('LOGGIN IN', data)
 
+print("load client end")
 # (sort of) hacky way to keep the client alive
 # ctrl + c to kill the script
 # while True:
