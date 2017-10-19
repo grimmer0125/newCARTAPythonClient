@@ -46,7 +46,7 @@ else:
 ## TODO change to image_q
 def update_debug_plot(q):
     try:       #Try to check if there is data in the queue
-        print("start to polling image data")
+        # print("start to polling image data")
         result=q.get_nowait()
 
         if result !='Q':
@@ -67,7 +67,7 @@ def update_debug_plot(q):
             canvas.draw()
             window.after(200,update_debug_plot,q)
         else:
-            # print('no queue done')
+            print('no queue done')
     except:
         # print("empty")
         window.after(200,update_debug_plot,q)
