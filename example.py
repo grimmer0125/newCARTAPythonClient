@@ -134,14 +134,16 @@ def main():
                 window.after(200, update_debug_plot, q)
 
         image_q = queue.Queue()
-        run_test()
+        # run_test()
 
         update_debug_plot(image_q) # here to poll data from cleint
         # run_test(q) to run functions of client in another thread
-        d = DebugWorker(run_test)
         print("current thread:")
         print(threading.current_thread().__class__.__name__)
-        # d.start()
+
+        d = DebugWorker(run_test)
+        d.start()
+
 
         print('before mainloop')
         window.mainloop()
