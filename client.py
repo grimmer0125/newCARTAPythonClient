@@ -238,67 +238,66 @@ class Client():
         elif collection == "responses":
             print("grimmer responses added/changed, self_sessionID:", fields["sessionID"])
 
-            cmd = fields["cmd"]
-            print("cmd respone:{}".format(cmd))
+            if "pushedImage" in fields:
+                print("get image") # handle images
+                # if "buffer" in fields:
+                imgString = fields["buffer"]
+                imageLeng = len(imgString)
+                print("image data size in command response:", imageLeng)
 
-            #1. TODO handle it
-            if cmd == command_REGISTER_IMAGEVIEWER:
-                print("response:REGISTER_IMAGEVIEWER")
-                data = fields["data"] # save controllerID to use
-                # will send setSize inside
-                self.controllerID = data
-                ImageController.parseReigsterViewResp(self.m_client, data)
-            elif cmd == command_REQUEST_FILE_LIST:
-                print("response:REQUEST_FILE_LIST:")
-                data = fields["data"]
-                files = data["dir"]
-                rootDir= data["name"]
-                print("files:{};dir:{}".format(files, rootDir))
-                print("response:REQUEST_FILE_LIST end")
-                self.queue.put("get file list resp")
-            elif cmd == command_SELECT_FILE_TO_OPEN:
-                print("response:SELECT_FILE_TO_OPEN")
-                if "buffer" in fields:
-                    print("get image !!!!")
-                    imgString = fields["buffer"]
-                    imageLeng = len(imgString)
-                    print("image data size in command response:", imageLeng)
+                #TODO the dummy empty images should be solved in the future, but now we use it to judge connect ok
+                if imageLeng > 10012:
+                    # url = "data:image/jpeg;base64,"+imgString
+                    # save to mongo for share screen
+                    #TODO python: forget to setup controllerID. js: forget to add size
+                    self.saveDataToCollection('imagecontroller', { "imageURL": imgString, "size": len(imgString) }, GET_IMAGE)
+                    #save file for testing
+                    # print("try to save image")
+                    # self.render_received_image(imgString)
 
-                    #TODO the dummy empty images should be solved in the future, but now we use it to judge connect ok
-                    if imageLeng > 10012:
-                        # url = "data:image/jpeg;base64,"+imgString
-                        # save to mongo for share screen
-                        #TODO python: forget to setup controllerID. js: forget to add size
-                        self.saveDataToCollection('imagecontroller', { "imageURL": imgString, "size": len(imgString) }, GET_IMAGE)
-                        #save file for testing
-                        # print("try to save image")
-                        # self.render_received_image(imgString)
+                    # imgdata = base64.b64decode(imgString)
+                    # filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
+                    # with open(filename, 'wb') as f:
+                    #     f.write(imgdata)
+                    #
+                    #     if run_from_interactive():
+                    #         # img = mpimg.imread('1.jpg'), from file
+                    #         i = io.BytesIO(imgdata)
+                    #         i = mpimg.imread(i, format='JPG') # from memory, binary
+                    #
+                    #         # plt.imshow(i, interpolation='nearest')
+                    #         #TODO let mainthread to redraw
+                    #         imgplot = plt.imshow(i)# may be no difference
+                    #         plt.pause(0.01)
+                    #     else:
+                    #         print("not ipython, so do no show image after saving")
 
-                        # imgdata = base64.b64decode(imgString)
-                        # filename = currentTime +".jpg"  # I assume you have a way of picking unique filenames
-                        # with open(filename, 'wb') as f:
-                        #     f.write(imgdata)
-                        #
-                        #     if run_from_interactive():
-                        #         # img = mpimg.imread('1.jpg'), from file
-                        #         i = io.BytesIO(imgdata)
-                        #         i = mpimg.imread(i, format='JPG') # from memory, binary
-                        #
-                        #         # plt.imshow(i, interpolation='nearest')
-                        #         #TODO let mainthread to redraw
-                        #         imgplot = plt.imshow(i)# may be no difference
-                        #         plt.pause(0.01)
-                        #     else:
-                        #         print("not ipython, so do no show image after saving")
+                # global numberOfImages
+                self.numberOfImages += 1
+                if self.numberOfImages == 2:
+                    print("get dummy 2 images. start to request testing image, aj.fits")
+                    self.queue.put(connect_response)
+            elif "cmd" in fields:
+                cmd = fields["cmd"]
+                print("cmd respone:{}".format(cmd))
 
-                    # global numberOfImages
-                    self.numberOfImages += 1
-                    if self.numberOfImages == 2:
-                        print("get dummy 2 images. start to request testing image, aj.fits")
-                        self.queue.put(connect_response)
-                else:
-                    print("dummy response of select file request")
-
+                #1. TODO handle it
+                if cmd == command_REGISTER_IMAGEVIEWER:
+                    print("response:REGISTER_IMAGEVIEWER")
+                    data = fields["data"] # save controllerID to use
+                    # will send setSize inside
+                    self.controllerID = data
+                    ImageController.parseReigsterViewResp(self.m_client, data)
+                elif cmd == command_REQUEST_FILE_LIST:
+                    print("response:REQUEST_FILE_LIST:")
+                    data = fields["data"]
+                    files = data["dir"]
+                    rootDir= data["name"]
+                    print("files:{};dir:{}".format(files, rootDir))
+                    print("response:REQUEST_FILE_LIST end")
+                    self.queue.put("get file list resp")
+                elif cmd == command_SELECT_FILE_TO_OPEN:
+                    print("response:SELECT_FILE_TO_OPEN")
             #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
             self.m_client.remove('responses', {'_id': id}, callback=self.remove_callback)
 
@@ -428,7 +427,7 @@ class Client():
             self.setup_subscription()
             self.queue.put(connect_response)
         print('end connected, try login')
-        self.m_client.login('grimmer4', "123456")
+        self.m_client.login('grimmer4', "1234")
 
     def removed(self, collection, id):
         print('* REMOVED {} {}'.format(collection, id))
