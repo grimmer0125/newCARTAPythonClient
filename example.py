@@ -45,7 +45,7 @@ else:
 def run_test():
     from client import Client
     # in another thread/process to test
-    c = Client()
+    c = Client("test", "test")
     if image_q is None:
         print("ignore g!!!!!!!!!")
     else:

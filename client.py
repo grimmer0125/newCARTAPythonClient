@@ -56,14 +56,17 @@ connect_response = "connect_response"
 
 # will launch matplotlib
 class Client():
-    def __init__(self, session = None):
+    def __init__(self, user, password):
         self.m_client = MeteorClient('ws://127.0.0.1:3000/websocket')
         self.controllerID = None
         self.use_other_session = False
         self.session_manager = SessionManager()
-        if session != None:
-            self.session_manager.use_other_session(session)
-            self.use_other_session = True
+        self.user = user
+        self.password = password
+        # if session != None:
+        #     self.session_manager.use_other_session(session)
+        #     self.use_other_session = True
+
         # print("test:{}".format(testtest))
         # self.sefSessionID = None
         # self.controllerID = None
@@ -91,6 +94,9 @@ class Client():
             # matplotlib.use('TkAgg')
             # self.window = Tk()
             # self.window.mainloop()
+    def watch_other_session(self, session):
+        self.session_manager.use_other_session(session)
+        self.use_other_session = True
 
     def setup_debug_image_queue(self, queue):
         self.debug_image_queue = queue
@@ -298,7 +304,7 @@ class Client():
                     self.queue.put("get file list resp")
                 elif cmd == command_SELECT_FILE_TO_OPEN:
                     print("response:SELECT_FILE_TO_OPEN")
-            #2.  remove it, may not be necessary for Browser, just alight with React JS Browser client
+            #2.  remove it, may not be necessary for Browser, just aligh with React JS Browser client
             self.m_client.remove('responses', {'_id': id}, callback=self.remove_callback)
 
         elif collection == "imagecontroller":
@@ -427,7 +433,7 @@ class Client():
             self.setup_subscription()
             self.queue.put(connect_response)
         print('end connected, try login')
-        self.m_client.login('grimmer4', "1234")
+        self.m_client.login(self.user, self.password)
 
     def removed(self, collection, id):
         print('* REMOVED {} {}'.format(collection, id))
