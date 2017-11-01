@@ -52,6 +52,7 @@ def run_test():
         print("image queue in client")
         c.setup_debug_image_queue(image_q)
         # print("start cartaclient example2")
+    # c.setup_url("acdc0.asiaa.sinica.edu.tw:47569")
     c.start_connection()
     c.requset_file_list()
     c.request_file_show("aJ.fits")

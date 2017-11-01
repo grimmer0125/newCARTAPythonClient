@@ -33,12 +33,13 @@ def parseReigsterViewResp(client, data):
     #     console.log('get setupViewSize dummy result:', result);
     # });
 
-def selectFileToOpen(session, client, controllerID, file):
+def selectFileToOpen(session, client, controllerID, file, folder):
     # time.sleep(10) # 10 for testing sharing session between python and browser
 
     home = expanduser("~")
     # print(home)
-    path = home + "/CARTA/Images/" + file
+    # path = home + "/CARTA/Images/" + file
+    path = folder + "/" + file
 
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path

@@ -57,12 +57,15 @@ connect_response = "connect_response"
 # will launch matplotlib
 class Client():
     def __init__(self, user, password):
-        self.m_client = MeteorClient('ws://127.0.0.1:3000/websocket')
+        self.url = 'ws://127.0.0.1:3000/websocket'
+        self.m_client = None
         self.controllerID = None
+        self.m_client = None
         self.use_other_session = False
         self.session_manager = SessionManager()
         self.user = user
         self.password = password
+        self.remote_current_folder = None
         # if session != None:
         #     self.session_manager.use_other_session(session)
         #     self.use_other_session = True
@@ -101,7 +104,11 @@ class Client():
     def setup_debug_image_queue(self, queue):
         self.debug_image_queue = queue
 
+    def setup_url(self, url):
+        self.url = "ws://"+url + "/websocket"
     def start_connection(self):
+        self.m_client = MeteorClient(self.url)
+        self.controllerID = None
         self.m_client.on('removed', self.removed)
         self.m_client.on('changed', self.changed)
         self.m_client.on('subscribed', self.subscribed)
@@ -141,7 +148,7 @@ class Client():
                 break
 
     def request_file_show(self, file):
-        ImageController.selectFileToOpen(self.session_manager.get(), self.m_client, self.controllerID, file)
+        ImageController.selectFileToOpen(self.session_manager.get(), self.m_client, self.controllerID, file, self.remote_current_folder)
 
     def subscribed(self, subscription):
         print('* SUBSCRIBED {}'.format(subscription))
@@ -299,6 +306,7 @@ class Client():
                     data = fields["data"]
                     files = data["dir"]
                     rootDir= data["name"]
+                    self.remote_current_folder = rootDir
                     print("files:{};dir:{}".format(files, rootDir))
                     print("response:REQUEST_FILE_LIST end")
                     self.queue.put("get file list resp")
