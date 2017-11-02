@@ -241,6 +241,15 @@ class Client():
         else:
             dprint("not ipython, so do no show image after saving")
             self.debug_image_queue.put(i)
+    def print_file_list(self, rootDir, files):
+        print("\ncurrent folder:{}".format(rootDir))
+        for file in files:
+            if "type" in file:
+                print("{} type:{}".format(file["name"], file["type"]))
+            elif "dir" in file:
+                print("{} type:{}".format(file["name"], "folder"))
+            else:
+                print("{} type:".format(file["name"]))
     def handleAddedOrChanged(self, collection, id, fields):
         for key, value in fields.items():
             dprint('  - FIELD {}'.format(key))
@@ -306,7 +315,8 @@ class Client():
                     files = data["dir"]
                     rootDir= data["name"]
                     self.remote_current_folder = rootDir
-                    print("files:{};dir:{}".format(files, rootDir))
+                    # print("files:{};dir:{}".format(files, rootDir))
+                    self.print_file_list(rootDir, files)
                     dprint("response:REQUEST_FILE_LIST end")
                     self.queue.put("get file list resp")
                 elif cmd == command_SELECT_FILE_TO_OPEN:
