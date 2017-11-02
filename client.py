@@ -1,13 +1,14 @@
 # https://github.com/hharnisc/python-meteor
+from helper import *
 
 import sys
 is_py2 = sys.version[0] == '2'
 if is_py2:
-    print("use python 2")
+    dprint("use python 2")
     import Queue as queue
     # from Tkinter import *
 else:
-    print("use python 3")
+    dprint("use python 3")
     import queue as queue
     # from tkinter import *
 
@@ -15,8 +16,8 @@ import time
 from datetime import datetime
 import base64
 import sys
-print(sys.version)
-print(sys.executable)
+dprint(sys.version)
+dprint(sys.executable)
 
 from lib.meteor.MeteorClient import MeteorClient
 # import sessionmanager as SessionManager
@@ -27,9 +28,8 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib
 import io
-from helper import *
 
-print("load client.py start")
+dprint("load client.py start")
 
 
 # window = None
@@ -70,7 +70,7 @@ class Client():
         #     self.session_manager.use_other_session(session)
         #     self.use_other_session = True
 
-        # print("test:{}".format(testtest))
+        # dprint("test:{}".format(testtest))
         # self.sefSessionID = None
         # self.controllerID = None
         # https://stackoverflow.com/questions/43471696/sending-data-to-a-thread-in-python
@@ -81,19 +81,19 @@ class Client():
         # self.testimage = 0
 
         # if isnotebook():
-        #     print("is notebook")
+        #     dprint("is notebook")
 
         # import matplotlib
         # matplotlib.use('TkAgg')
         # sys.exit()
 
         if run_from_interactive():
-            print("is ipython, setup matplotlib")
+            dprint("is ipython, setup matplotlib")
             plt.ion()
             plt.figure()
             plt.show()
         else:
-            print("not ipython")
+            dprint("not ipython")
             # matplotlib.use('TkAgg')
             # self.window = Tk()
             # self.window.mainloop()
@@ -119,10 +119,10 @@ class Client():
         self.m_client.connect()
         while True:
             try:
-                print("wait for connect resp")
+                print("wait for connect response")
                 # time.sleep(0.02)
                 resp = self.queue.get()
-                print("get connect resp:{}".format(resp))
+                dprint("get connect resp:{}".format(resp))
                 break
                 # check the queue
             except KeyboardInterrupt:
@@ -141,7 +141,7 @@ class Client():
                 print("wait for request file resp")
                 # time.sleep(0.02)
                 resp = self.queue.get()
-                print("get request file resp:{}".format(resp))
+                dprint("get request file resp:{}".format(resp))
                 break
                 # check the queue
             except KeyboardInterrupt:
@@ -154,40 +154,40 @@ class Client():
         print('* SUBSCRIBED {}'.format(subscription))
 
     def unsubscribed(self, subscription):
-        print('* UNSUBSCRIBED {}'.format(subscription))
+        dprint('* UNSUBSCRIBED {}'.format(subscription))
 
     def remove_callback(self, error, data):
-        print("in self.remove_callback")
+        dprint("in self.remove_callback")
         if error:
-            print(error)
+            dprint(error)
             return
-        print(data)
+        dprint(data)
 
     def remove_image_callback(self, error, data):
-        print("in remove_image_callback")
+        dprint("in remove_image_callback")
         if error:
-            print(error)
+            dprint(error)
             return
-        print("in remove_image_callback ok")
-        # print(data)
+        dprint("in remove_image_callback ok")
+        # dprint(data)
 
     def insert_callback(self, error, data):
-        print("insert callback")
+        dprint("insert callback")
         if error:
-            print(error)
+            dprint(error)
             return
-        print("insert callback ok")
+        dprint("insert callback ok")
         # docs = client.find(collection, selector={'sessionID': sessionID})
 
-        # print(data)
+        # dprint(data)
 
     def update_callback(self, error, data):
-        print("update callback")
+        dprint("update callback")
         if error:
-            print(error)
+            dprint(error)
             return
-        print("udpate callback ok")
-        # print(data)
+        dprint("udpate callback ok")
+        # dprint(data)
 
     # python client seems to have no Optimistic update on py-client https://www.meteor.com/tutorials/blaze/security-with-methods
     def saveDataToCollection(self, collection, newDocObject, actionType):
@@ -195,7 +195,7 @@ class Client():
         docs = self.m_client.find(collection, selector={'sessionID': sessionID})
         total = len(docs)
         if total > 0:
-            print("try to replace first image in mongo, total images:", total)
+            dprint("try to replace first image in mongo, total images:", total)
             doc = docs[0]
             docID = doc["_id"]
             newDocObject["sessionID"] = sessionID
@@ -203,10 +203,10 @@ class Client():
             self.m_client.update(collection, {'_id': docID}, newDocObject, callback=self.update_callback)
         else:
             # insert
-            print("try to to insert images")
+            dprint("try to to insert images")
             newDocObject["sessionID"] = sessionID
             self.m_client.insert(collection, newDocObject, callback=self.insert_callback)
-            print("end to insert")
+            dprint("end to insert")
 
             #     newDocObject.sessionID = sessionID;
             #const docID = collection.insert(newDocObject);
@@ -218,18 +218,18 @@ class Client():
     # fields are changed fields
 
     def render_received_image(self, imgString):
-        print("render_received_image")
+        dprint("render_received_image")
 
         imgdata = base64.b64decode(imgString)
 
         # NOTE: since we have tk+matplotlib for debugging, so no more saving images to files
-        # print("try to save image")
+        # dprint("try to save image")
         # currentTime = str(datetime.now())
-        # print("currentTime:", currentTime)
+        # dprint("currentTime:", currentTime)
         # filename = currentTime +".jpg"
         # with open(filename, 'wb') as f:
         #     f.write(imgdata)
-        # print("end to save image")
+        # dprint("end to save image")
 
         i = io.BytesIO(imgdata)
         i = mpimg.imread(i, format='JPG')  # from memory, binary
@@ -239,24 +239,23 @@ class Client():
             imgplot = plt.imshow(i)# may be no difference
             plt.pause(0.01)
         else:
-            print("not ipython, so do no show image after saving")
+            dprint("not ipython, so do no show image after saving")
             self.debug_image_queue.put(i)
     def handleAddedOrChanged(self, collection, id, fields):
         for key, value in fields.items():
-            print('  - FIELD {}'.format(key))
-            # print('  - FIELD {} {}'.format(key, value))
+            dprint('  - FIELD {}'.format(key))
+            # dprint('  - FIELD {} {}'.format(key, value))
 
         if collection == "users":
-            print("grimmer users added/changed ")
+            dprint("grimmer users added/changed ")
         elif collection == "responses":
-            print("grimmer responses added/changed, self_sessionID:", fields["sessionID"])
+            dprint("grimmer responses added/changed, self_sessionID:", fields["sessionID"])
 
             if "pushedImage" in fields:
-                print("get image") # handle images
                 # if "buffer" in fields:
                 imgString = fields["buffer"]
                 imageLeng = len(imgString)
-                print("image data size in command response:", imageLeng)
+                print("get image, data size in (cmd) response:", imageLeng)
 
                 #TODO the dummy empty images should be solved in the future, but now we use it to judge connect ok
                 if imageLeng > 10012:
@@ -265,7 +264,7 @@ class Client():
                     #TODO python: forget to setup controllerID. js: forget to add size
                     self.saveDataToCollection('imagecontroller', { "imageURL": imgString, "size": len(imgString) }, GET_IMAGE)
                     #save file for testing
-                    # print("try to save image")
+                    # dprint("try to save image")
                     # self.render_received_image(imgString)
 
                     # imgdata = base64.b64decode(imgString)
@@ -283,12 +282,12 @@ class Client():
                     #         imgplot = plt.imshow(i)# may be no difference
                     #         plt.pause(0.01)
                     #     else:
-                    #         print("not ipython, so do no show image after saving")
+                    #         dprint("not ipython, so do no show image after saving")
 
                 # global numberOfImages
                 self.numberOfImages += 1
                 if self.numberOfImages == 2:
-                    print("get dummy 2 images. start to request testing image, aj.fits")
+                    print("get dummy 2 images")
                     self.queue.put(connect_response)
             elif "cmd" in fields:
                 cmd = fields["cmd"]
@@ -308,7 +307,7 @@ class Client():
                     rootDir= data["name"]
                     self.remote_current_folder = rootDir
                     print("files:{};dir:{}".format(files, rootDir))
-                    print("response:REQUEST_FILE_LIST end")
+                    dprint("response:REQUEST_FILE_LIST end")
                     self.queue.put("get file list resp")
                 elif cmd == command_SELECT_FILE_TO_OPEN:
                     print("response:SELECT_FILE_TO_OPEN")
@@ -316,16 +315,15 @@ class Client():
             self.m_client.remove('responses', {'_id': id}, callback=self.remove_callback)
 
         elif collection == "imagecontroller":
-            print("grimmer imagecontroller added/changed")
             sessionID = self.session_manager.get()
             docs = self.m_client.find(collection, selector={'sessionID': sessionID})
             total = len(docs)
+            print("imagecontroller added/changed event happens, total docs:", total)
             if total > 0:
-                print("total doc:",total)
                 # firstDoc = docs[0]
                 for doc in docs:
                     docID = doc["_id"]
-                    print("loop image collection, id is", docID)
+                    dprint("loop image collection, id is", docID)
                     #NOTE since meteor-python does not have Optimistic update so that we need to remove old images after getting added/changed callback
                     if docID != id:
                         print("remove one image document")
@@ -333,7 +331,7 @@ class Client():
                         # global testimage
                         # testimage +=1
                         # if testimage ==1:
-                        #     print("try 2nd image file")
+                        #     dprint("try 2nd image file")
                         #     ImageController.selectFileToOpen2(client)
                         #
                         # doc["comments"] = "apple"
@@ -341,17 +339,17 @@ class Client():
                         # for testing
                         # client.update('imagecontroller', {'_id': docID}, doc, callback=update_callback)
                     else:
-                        print("not remove it")
-                        print("image size in collection:", len(doc["imageURL"]))
+                        dprint("not remove it")
+                        dprint("image size in collection:", len(doc["imageURL"]))
                         self.render_received_image(doc["imageURL"])
 
                         # delete previous images
 
     #TODO commmand response need to be deleted.
     def added(self, collection, id, fields):
-        print('* ADDED {} {}'.format(collection, id))
+        dprint('* ADDED {} {}'.format(collection, id))
         self.handleAddedOrChanged(collection, id, fields)
-        print('end added')
+        dprint('end added')
 
 
     #  ADDED users vo5Eb7cG94waZmiGY
@@ -360,27 +358,27 @@ class Client():
         # query the data each time something has been added to
         # a collection to see the data `grow`
         # all_lists = client.find('lists', selector={})
-        # print('Lists: {}'.format(all_lists))
-        # print('Num lists: {}'.format(len(all_lists)))
+        # dprint('Lists: {}'.format(all_lists))
+        # dprint('Num lists: {}'.format(len(all_lists)))
 
         # if collection == 'list' you could subscribe to the list here
         # with something like
         # client.subscribe('todos', id)
         # all_todos = client.find('todos', selector={})
-        # print 'Todos: {}'.format(all_todos)
+        # dprint 'Todos: {}'.format(all_todos)
 
         # all_lists = client.find('tasks', selector={})
-        # print('Tasks: {}'.format(all_lists))
-        # print('Num lists: {}'.format(len(all_lists)))
+        # dprint('Tasks: {}'.format(all_lists))
+        # dprint('Num lists: {}'.format(len(all_lists)))
 
     def changed(self, collection, id, fields, cleared):
-        print('CHANGED !!!: {} {}'.format(collection, id))
+        dprint('CHANGED !!!: {} {}'.format(collection, id))
         handleAddedOrChanged(collection, id, fields) # only take effect when JS changes rendered image
 
         # all_lists = client.find('tasks', selector={})
-        # print('Tasks: {}'.format(all_lists))
-        # print('Num lists: {}'.format(len(all_lists)))
-        print('end changed')
+        # dprint('Tasks: {}'.format(all_lists))
+        # dprint('Num lists: {}'.format(len(all_lists)))
+        dprint('end changed')
 
 
 
@@ -389,20 +387,20 @@ class Client():
 
     def subscription_response_callback(self, error):
         if error:
-            print("sub fail")
-            print(error)
-        print("sub resp ok")
+            dprint("sub fail")
+            dprint(error)
+        dprint("sub resp ok")
 
     def subscription_image_callback(self, error):
         if error:
-            print("sub2 fail")
-            print(error)
-        print("sub image ok2")
+            dprint("sub2 fail")
+            dprint(error)
+        dprint("sub image ok2")
         if self.use_other_session == False:
             ImageController.sendRegiserView(self.session_manager.get(), self.m_client)
 
     def setup_subscription(self):
-        print("get:", self.session_manager.get())
+        dprint("get:", self.session_manager.get())
 
         if self.use_other_session == False:
             self.m_client.subscribe('commandResponse', [self.session_manager.get()], callback=self.subscription_response_callback)
@@ -410,11 +408,10 @@ class Client():
         self.m_client.subscribe('imagecontroller', [self.session_manager.get()], callback=self.subscription_image_callback)
     def getSession_callback(self, error, result):
         if error:
-            print("getSession_callback error")
-            print(error)
+            dprint("getSession_callback error")
+            dprint(error)
             return
-        print("in getSession_callback")
-        print(result)
+        print("in getSession_callback, sessionID:", result)
         if self.use_other_session == False:
             self.session_manager.set(result)
         # subscribe response
@@ -423,33 +420,33 @@ class Client():
         self.setup_subscription()
 
     def getSession(self):
-        print("try getSession")
-        print("setupt subscription callback")
+        dprint("try getSession")
+        dprint("setup subscription callback")
 
         # empty params, so []
         self.m_client.call(getSessionCmd, [], self.getSession_callback)
 
     def connected(self):
-        print('* CONNECTED')
+        dprint('* CONNECTED')
         # all_lists = client.find('tasks', selector={})
-        # print('Tasks: {}'.format(all_lists))
-        # print('Num lists: {}'.format(len(all_lists)))
+        # dprint('Tasks: {}'.format(all_lists))
+        # dprint('Num lists: {}'.format(len(all_lists)))
         if self.use_other_session == False:
-            print('setup subscribe collection in session callback')
+            dprint('setup subscribe collection in session callback')
             self.getSession()
         else:
             self.setup_subscription()
             self.queue.put(connect_response)
-        print('end connected, try login')
+        print('connected, try login')
         self.m_client.login(self.user, self.password)
 
     def removed(self, collection, id):
-        print('* REMOVED {} {}'.format(collection, id))
+        dprint('* REMOVED {} {}'.format(collection, id))
 
     def on_logged_in(self, data):
         print('LOGGIN IN', data)
 
-print("load client end")
+print("import client ok")
 # (sort of) hacky way to keep the client alive
 # ctrl + c to kill the script
 # while True:

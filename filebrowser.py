@@ -1,10 +1,12 @@
+from helper import *
+
 import sessionmanager as SessionManager
 
 sendCmd = 'sendCommand'
 command_REQUEST_FILE_LIST = '/CartaObjects/DataLoader:getData'
 
 def queryServerFileList(session, client):
-    print("queryServerFileList")
+    dprint("queryServerFileList")
     # cmd = '/CartaObjects/ViewManager:registerView'
     # const cmd = Commands.REGISTER_IMAGEVIEWER; // '/CartaObjects/ViewManager:registerView';
     params = 'path:'
@@ -13,9 +15,9 @@ def queryServerFileList(session, client):
 
     def query_file_list_callback(error, result):
         if error:
-            print(error)
+            dprint(error)
             return
-        print("in query_file_list_callback")
-        print(result)
+        dprint("in query_file_list_callback")
+        dprint(result)
 
     client.call(sendCmd, [command_REQUEST_FILE_LIST, params, session], query_file_list_callback)

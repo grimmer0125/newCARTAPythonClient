@@ -1,5 +1,6 @@
+from helper import *
 
-print("load import SessionManager, sessionid")
+#print("load import SessionManager, sessionid")
 
 class SessionManager():
     def __init__(self):
@@ -12,17 +13,17 @@ class SessionManager():
 
     def set(self, sessionID):
         # global selfSessionID
-        print("setupt sessionid")
+        dprint("setup sessionid")
         self.selfSessionID = sessionID
 
     # can be replaced by get_suitable_session totally
     def get(self):
-        print("get session")
+        dprint("get session")
         if self.otherSessionID != None:
-            print("load other sessionid", self.otherSessionID)
+            dprint("load other sessionid", self.otherSessionID)
             return self.otherSessionID
         else:
-            print("load self sessionid", self.selfSessionID)
+            dprint("load self sessionid", self.selfSessionID)
         return self.selfSessionID
 
 # def get_suitable_session():

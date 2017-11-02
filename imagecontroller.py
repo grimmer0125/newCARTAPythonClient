@@ -1,4 +1,6 @@
 #import SessionManager
+from helper import *
+
 import sessionmanager as SessionManager
 
 import time
@@ -15,13 +17,13 @@ setSizeCmd = 'setupViewSize'
 
 def setSizeCallback(error, result) :
     if error:
-        print(error)
+        dprint(error)
         return
-    print("in setSizeCallback_callback")
-    print(result)
+    dprint("in setSizeCallback_callback")
+    dprint(result)
 
 def parseReigsterViewResp(client, data):
-    print("parseReigsterViewResp, try to send setupt size")
+    print("parse ReigsterView Resp, try to send setup size, 637, 637")
     # global controllerID
     # controllerID = data
     viewName = data+"/view"
@@ -43,7 +45,7 @@ def selectFileToOpen(session, client, controllerID, file, folder):
 
     # controllerID = state.imageController.controllerID;
     parameter = "id:"+controllerID+",data:"+path
-    print("query:", parameter)
+    print("query file list parameter:", parameter)
     # console.log('inject file parameter, become:', parameter);
     #
     # Meteor.call('sendCommand', Commands.SELECT_FILE_TO_OPEN, parameter, SessionManager.get_suitable_session(), (error, result) => {
@@ -53,8 +55,8 @@ def selectFileToOpen(session, client, controllerID, file, folder):
         if error:
             print(error)
             return
-        print("in selectFile_callback")
-        print(result)
+        dprint("in selectFile_callback")
+        dprint(result)
 
     client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, session], selectFile_callback)
 
@@ -81,7 +83,7 @@ def selectFileToOpen(session, client, controllerID, file, folder):
 #     client.call(sendCmd, [command_SELECT_FILE_TO_OPEN, parameter, session], selectFile_callback)
 
 def sendRegiserView(session, meteor_client):
-    print("sendRegiserView")
+    dprint("sendRegiserView")
     # cmd = '/CartaObjects/ViewManager:registerView'
     # const cmd = Commands.REGISTER_IMAGEVIEWER; // '/CartaObjects/ViewManager:registerView';
     params = 'pluginId:ImageViewer,index:0'
@@ -90,9 +92,9 @@ def sendRegiserView(session, meteor_client):
 
     def registerview_callback(error, result):
         if error:
-            print(error)
+            dprint(error)
             return
-        print("in registerview_callback")
-        print(result)
+        dprint("in registerview_callback")
+        dprint(result)
 
     meteor_client.call(sendCmd, [command_REGISTER_IMAGEVIEWER, params, session], registerview_callback)
