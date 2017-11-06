@@ -271,7 +271,7 @@ class Client():
                     # url = "data:image/jpeg;base64,"+imgString
                     # save to mongo for share screen
                     #TODO python: forget to setup controllerID. js: forget to add size
-                    self.saveDataToCollection('imagecontroller', { "imageURL": imgString, "size": len(imgString) }, GET_IMAGE)
+                    self.saveDataToCollection('imageviewerdb', { "imageURL": imgString, "size": len(imgString) }, GET_IMAGE)
                     #save file for testing
                     # dprint("try to save image")
                     # self.render_received_image(imgString)
@@ -324,7 +324,7 @@ class Client():
             #2.  remove it, may not be necessary for Browser, just aligh with React JS Browser client
             self.m_client.remove('responses', {'_id': id}, callback=self.remove_callback)
 
-        elif collection == "imagecontroller":
+        elif collection == 'imageviewerdb':
             sessionID = self.session_manager.get()
             docs = self.m_client.find(collection, selector={'sessionID': sessionID})
             total = len(docs)
@@ -337,7 +337,7 @@ class Client():
                     #NOTE since meteor-python does not have Optimistic update so that we need to remove old images after getting added/changed callback
                     if docID != id:
                         print("remove one image document")
-                        self.m_client.remove('imagecontroller', {'_id': docID}, callback=self.remove_image_callback)
+                        self.m_client.remove('imageviewerdb', {'_id': docID}, callback=self.remove_image_callback)
                         # global testimage
                         # testimage +=1
                         # if testimage ==1:
@@ -345,12 +345,12 @@ class Client():
                         #     ImageController.selectFileToOpen2(client)
                         #
                         # doc["comments"] = "apple"
-                        # for testing client.update('imagecontroller', {'_id': docID}, {"name": "ggg"}, callback=update_callback)
+                        # for testing client.update('imageviewerdb', {'_id': docID}, {"name": "ggg"}, callback=update_callback)
                         # for testing
-                        # client.update('imagecontroller', {'_id': docID}, doc, callback=update_callback)
+                        # client.update('imageviewerdb', {'_id': docID}, doc, callback=update_callback)
                     else:
                         dprint("not remove it")
-                        dprint("image size in collection:", len(doc["imageURL"]))
+                        print("image size in collection:", len(doc["imageURL"]))
                         self.render_received_image(doc["imageURL"])
 
                         # delete previous images
@@ -415,7 +415,7 @@ class Client():
         if self.use_other_session == False:
             self.m_client.subscribe('commandResponse', [self.session_manager.get()], callback=self.subscription_response_callback)
 
-        self.m_client.subscribe('imagecontroller', [self.session_manager.get()], callback=self.subscription_image_callback)
+        self.m_client.subscribe('imageviewerdb', [self.session_manager.get()], callback=self.subscription_image_callback)
     def getSession_callback(self, error, result):
         if error:
             dprint("getSession_callback error")
