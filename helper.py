@@ -6,6 +6,7 @@ import __main__ as main
 # https://stackoverflow.com/questions/13552907/way-to-pass-multiple
 #TODO print debug messages out
 def dprint(*args, **kwargs):
+    # print(*args, **kwargs)
     pass #print(str)
 
 def isnotebook():
