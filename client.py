@@ -105,6 +105,7 @@ class Client():
         self.debug_image_queue = queue
 
     def setup_url(self, url):
+        url = url.replace("localhost", "127.0.0.1")
         self.url = "ws://"+url + "/websocket"
     def start_connection(self):
         self.m_client = MeteorClient(self.url)
