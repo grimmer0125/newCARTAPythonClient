@@ -97,6 +97,9 @@ class Client():
             # matplotlib.use('TkAgg')
             # self.window = Tk()
             # self.window.mainloop()
+    def enable_print_debug(self, on):
+        enable_print_debug(on)
+
     def watch_other_session(self, session):
         self.session_manager.use_other_session(session)
         self.use_other_session = True
