@@ -1,4 +1,6 @@
 # https://stackoverflow.com/a/39662359/7354486
+from __future__ import print_function
+
 import __main__ as main
 
 print_debug_log = True
