@@ -5,6 +5,8 @@ import sys
 is_py2 = sys.version[0] == '2'
 if is_py2:
     dprint("use python 2")
+    reload(sys)  # 2
+    sys.setdefaultencoding('utf-8')
     import Queue as queue
     # from Tkinter import *
 else:
@@ -22,8 +24,10 @@ dprint(sys.executable)
 from lib.meteor.MeteorClient import MeteorClient
 # import sessionmanager as SessionManager
 from sessionmanager import SessionManager
+
 import imagecontroller as ImageController
 import filebrowser as FileBrowser
+
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib
@@ -74,7 +78,7 @@ class Client():
         # self.sefSessionID = None
         # self.controllerID = None
         # https://stackoverflow.com/questions/43471696/sending-data-to-a-thread-in-python
-        self.queue = queue.Queue()
+        self.cmd_queue = queue.Queue()
 
         self.numberOfImages = 0
         self.debug_image_queue = None
@@ -125,7 +129,7 @@ class Client():
             try:
                 print("wait for connect response")
                 # time.sleep(0.02)
-                resp = self.queue.get()
+                resp = self.cmd_queue.get()
                 dprint("get connect resp:{}".format(resp))
                 break
                 # check the queue
@@ -144,7 +148,7 @@ class Client():
             try:
                 print("wait for request file resp")
                 # time.sleep(0.02)
-                resp = self.queue.get()
+                resp = self.cmd_queue.get()
                 dprint("get request file resp:{}".format(resp))
                 break
                 # check the queue
@@ -301,7 +305,7 @@ class Client():
                 self.numberOfImages += 1
                 if self.numberOfImages == 2:
                     print("get dummy 2 images")
-                    self.queue.put(connect_response)
+                    self.cmd_queue.put(connect_response)
             elif "cmd" in fields:
                 cmd = fields["cmd"]
                 print("cmd respone:{}".format(cmd))
@@ -322,7 +326,7 @@ class Client():
                     # print("files:{};dir:{}".format(files, rootDir))
                     self.print_file_list(rootDir, files)
                     dprint("response:REQUEST_FILE_LIST end")
-                    self.queue.put("get file list resp")
+                    self.cmd_queue.put("get file list resp")
                 elif cmd == command_SELECT_FILE_TO_OPEN:
                     print("response:SELECT_FILE_TO_OPEN")
             #2.  remove it, may not be necessary for Browser, just aligh with React JS Browser client
@@ -450,7 +454,7 @@ class Client():
             self.getSession()
         else:
             self.setup_subscription()
-            self.queue.put(connect_response)
+            self.cmd_queue.put(connect_response)
         print('connected, try login')
         self.m_client.login(self.user, self.password)
 
