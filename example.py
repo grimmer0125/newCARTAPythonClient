@@ -54,11 +54,16 @@ def run_test():
         # print("start cartaclient example2")
     # c.setup_url("acdc0.asiaa.sinica.edu.tw:47569")
     c.start_connection()
-    c.requset_file_list()
+    # c.files().request_file_list()
+    c.files().request_file_list()
     c.request_file_show("aJ.fits")
 def main():
     print("start cartaclient example")
 
+    if is_py2:
+        print("use python 2")
+    else:
+        print("use python 3")
     # window = None
     # Create a window
 

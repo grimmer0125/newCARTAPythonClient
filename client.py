@@ -27,6 +27,8 @@ from sessionmanager import SessionManager
 
 import imagecontroller as ImageController
 import filebrowser as FileBrowser
+from filebrowser import FileManager
+from apiService import ApiService
 
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -47,6 +49,10 @@ command_REQUEST_FILE_LIST = '/CartaObjects/DataLoader:getData'
 GET_IMAGE = 'GET_IMAGE'
 connect_response = "connect_response"
 
+a = 1
+b   = 1 # test python linter function
+print(b)
+
 # img = mpimg.imread('2.png')  #3s
 #     # img = mpimg.imread('1.jpg') 3s
 #
@@ -66,19 +72,19 @@ class Client():
         self.controllerID = None
         self.m_client = None
         self.use_other_session = False
-        self.session_manager = SessionManager()
+        # SessionManager.instance() = SessionManager()
         self.user = user
         self.password = password
         self.remote_current_folder = None
         # if session != None:
-        #     self.session_manager.use_other_session(session)
+        #     SessionManager.instance().use_other_session(session)
         #     self.use_other_session = True
 
         # dprint("test:{}".format(testtest))
         # self.sefSessionID = None
         # self.controllerID = None
         # https://stackoverflow.com/questions/43471696/sending-data-to-a-thread-in-python
-        self.cmd_queue = queue.Queue()
+        self.sync_resp_queue = queue.Queue()
 
         self.numberOfImages = 0
         self.debug_image_queue = None
@@ -90,6 +96,11 @@ class Client():
         # import matplotlib
         # matplotlib.use('TkAgg')
         # sys.exit()
+
+        self.m_client = MeteorClient(self.url)
+        self.controllerID = None
+        self.file_manager = FileManager()
+        ApiService.instance().set_client(self.m_client)
 
         if run_from_interactive():
             dprint("is ipython, setup matplotlib")
@@ -105,7 +116,7 @@ class Client():
         enable_print_debug(on)
 
     def watch_other_session(self, session):
-        self.session_manager.use_other_session(session)
+        SessionManager.instance().use_other_session(session)
         self.use_other_session = True
 
     def setup_debug_image_queue(self, queue):
@@ -115,8 +126,8 @@ class Client():
         url = url.replace("localhost", "127.0.0.1")
         self.url = "ws://"+url + "/websocket"
     def start_connection(self):
-        self.m_client = MeteorClient(self.url)
-        self.controllerID = None
+        # self.m_client = MeteorClient(self.url)
+        # self.controllerID = None
         self.m_client.on('removed', self.removed)
         self.m_client.on('changed', self.changed)
         self.m_client.on('subscribed', self.subscribed)
@@ -129,7 +140,7 @@ class Client():
             try:
                 print("wait for connect response")
                 # time.sleep(0.02)
-                resp = self.cmd_queue.get()
+                resp = self.sync_resp_queue.get()
                 dprint("get connect resp:{}".format(resp))
                 break
                 # check the queue
@@ -139,24 +150,26 @@ class Client():
     # def stop_connection(self):
     #     #TODO: unscribe, logout, close
     #
-    # def request_file_list(self):
-    #     #TODO:
 
-    def requset_file_list(self):
-        FileBrowser.queryServerFileList(self.session_manager.get(), self.m_client)
-        while True:
-            try:
-                print("wait for request file resp")
-                # time.sleep(0.02)
-                resp = self.cmd_queue.get()
-                dprint("get request file resp:{}".format(resp))
-                break
-                # check the queue
-            except KeyboardInterrupt:
-                break
+    def files(self):
+        return self.file_manager
+
+    # def request_file_list(self, if_async=False, callback=None):
+        # FileBrowser.queryServerFileList(SessionManager.instance().get_session(), self.m_client)
+
+        # while True:
+        #     try:
+        #         print("wait for request file resp")
+        #         # time.sleep(0.02)
+        #         resp = self.sync_resp_queue.get()
+        #         dprint("get request file resp:{}".format(resp))
+        #         break
+        #         # check the queue
+        #     except KeyboardInterrupt:
+        #         break
 
     def request_file_show(self, file):
-        ImageController.selectFileToOpen(self.session_manager.get(), self.m_client, self.controllerID, file, self.remote_current_folder)
+        ImageController.selectFileToOpen(SessionManager.instance().get_session(), self.m_client, self.controllerID, file, self.files().remote_current_folder)
 
     def subscribed(self, subscription):
         print('* SUBSCRIBED {}'.format(subscription))
@@ -199,7 +212,7 @@ class Client():
 
     # python client seems to have no Optimistic update on py-client https://www.meteor.com/tutorials/blaze/security-with-methods
     def saveDataToCollection(self, collection, newDocObject, actionType):
-        sessionID = self.session_manager.get()
+        sessionID = SessionManager.instance().get_session()
         docs = self.m_client.find(collection, selector={'sessionID': sessionID})
         total = len(docs)
         if total > 0:
@@ -249,15 +262,35 @@ class Client():
         else:
             dprint("not ipython, so do no show image after saving")
             self.debug_image_queue.put(i)
-    def print_file_list(self, rootDir, files):
-        print("\ncurrent folder:{}".format(rootDir))
-        for file in files:
-            if "type" in file:
-                print("{} type:{}".format(file["name"], file["type"]))
-            elif "dir" in file:
-                print("{} type:{}".format(file["name"], "folder"))
-            else:
-                print("{} type:".format(file["name"]))
+
+    def receive_response(self, fields):
+        cmd = fields["cmd"]
+        print("cmd respone:{}".format(cmd))
+
+        if cmd == command_REGISTER_IMAGEVIEWER:
+            #1. TODO handle it in new way (below)
+            print("response:REGISTER_IMAGEVIEWER")
+            data = fields["data"] # save controllerID to use
+            # will send setSize inside
+            self.controllerID = data
+            ImageController.parseReigsterViewResp(self.m_client, data)
+        # elif cmd == command_REQUEST_FILE_LIST:
+        #     print("response:REQUEST_FILE_LIST:")
+        #     data = fields["data"]
+        #     files = data["dir"]
+        #     rootDir= data["name"]
+
+        #     self.remote_current_folder = rootDir
+        #     # print("files:{};dir:{}".format(files, rootDir))
+        #     self.print_file_list(rootDir, files)
+        #     dprint("response:REQUEST_FILE_LIST end")
+        #     self.sync_resp_queue.put("get file list resp")
+        # elif cmd == command_SELECT_FILE_TO_OPEN:
+        #     print("response:SELECT_FILE_TO_OPEN")
+        else:
+            ApiService.instance().consume_response(fields)
+
+
     def handleAddedOrChanged(self, collection, id, fields):
         for key, value in fields.items():
             dprint('  - FIELD {}'.format(key))
@@ -305,35 +338,14 @@ class Client():
                 self.numberOfImages += 1
                 if self.numberOfImages == 2:
                     print("get dummy 2 images")
-                    self.cmd_queue.put(connect_response)
+                    self.sync_resp_queue.put(connect_response)
             elif "cmd" in fields:
-                cmd = fields["cmd"]
-                print("cmd respone:{}".format(cmd))
-
-                #1. TODO handle it
-                if cmd == command_REGISTER_IMAGEVIEWER:
-                    print("response:REGISTER_IMAGEVIEWER")
-                    data = fields["data"] # save controllerID to use
-                    # will send setSize inside
-                    self.controllerID = data
-                    ImageController.parseReigsterViewResp(self.m_client, data)
-                elif cmd == command_REQUEST_FILE_LIST:
-                    print("response:REQUEST_FILE_LIST:")
-                    data = fields["data"]
-                    files = data["dir"]
-                    rootDir= data["name"]
-                    self.remote_current_folder = rootDir
-                    # print("files:{};dir:{}".format(files, rootDir))
-                    self.print_file_list(rootDir, files)
-                    dprint("response:REQUEST_FILE_LIST end")
-                    self.cmd_queue.put("get file list resp")
-                elif cmd == command_SELECT_FILE_TO_OPEN:
-                    print("response:SELECT_FILE_TO_OPEN")
+                self.receive_response(fields)
             #2.  remove it, may not be necessary for Browser, just aligh with React JS Browser client
             self.m_client.remove('responses', {'_id': id}, callback=self.remove_callback)
 
         elif collection == 'imageviewerdb':
-            sessionID = self.session_manager.get()
+            sessionID = SessionManager.instance().get_session()
             docs = self.m_client.find(collection, selector={'sessionID': sessionID})
             total = len(docs)
             print("imagecontroller added/changed event happens, total docs:", total)
@@ -415,15 +427,15 @@ class Client():
             dprint(error)
         dprint("sub image ok2")
         if self.use_other_session == False:
-            ImageController.sendRegiserView(self.session_manager.get(), self.m_client)
+            ImageController.sendRegiserView(SessionManager.instance().get_session(), self.m_client)
 
     def setup_subscription(self):
-        dprint("get:", self.session_manager.get())
+        dprint("get:", SessionManager.instance().get_session())
 
         if self.use_other_session == False:
-            self.m_client.subscribe('commandResponse', [self.session_manager.get()], callback=self.subscription_response_callback)
+            self.m_client.subscribe('commandResponse', [SessionManager.instance().get_session()], callback=self.subscription_response_callback)
 
-        self.m_client.subscribe('imageviewerdb', [self.session_manager.get()], callback=self.subscription_image_callback)
+        self.m_client.subscribe('imageviewerdb', [SessionManager.instance().get_session()], callback=self.subscription_image_callback)
     def getSession_callback(self, error, result):
         if error:
             dprint("getSession_callback error")
@@ -431,7 +443,7 @@ class Client():
             return
         print("in getSession_callback, sessionID:", result)
         if self.use_other_session == False:
-            self.session_manager.set(result)
+            SessionManager.instance().set_session(result)
         # subscribe response
         # subscribe imageController
         # observe response, imageController
@@ -454,7 +466,7 @@ class Client():
             self.getSession()
         else:
             self.setup_subscription()
-            self.cmd_queue.put(connect_response)
+            self.sync_resp_queue.put(connect_response)
         print('connected, try login')
         self.m_client.login(self.user, self.password)
 

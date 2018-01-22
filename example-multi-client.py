@@ -54,7 +54,7 @@ def run_test():
         # print("start cartaclient example2")
     # c.setup_url("acdc0.asiaa.sinica.edu.tw:47569")
     c.start_connection()
-    c.requset_file_list()
+    c.files().request_file_list()
     c.request_file_show("cube_x220_z100_17MB-20.fits") #aJ
 
     c2 = Client("test", "test")
@@ -66,7 +66,7 @@ def run_test():
         # print("start cartaclient example2")
     # c.setup_url("acdc0.asiaa.sinica.edu.tw:47569")
     c2.start_connection()
-    c2.requset_file_list()
+    c2.files().request_file_list()
     c2.request_file_show("cube_x220_z100_17MB-19.fits")
 def main():
     print("start cartaclient example")
