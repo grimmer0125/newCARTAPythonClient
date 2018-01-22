@@ -75,7 +75,7 @@ class Client():
         # SessionManager.instance() = SessionManager()
         self.user = user
         self.password = password
-        self.remote_current_folder = None
+        # self.remote_current_folder = None
         # if session != None:
         #     SessionManager.instance().use_other_session(session)
         #     self.use_other_session = True
@@ -84,9 +84,9 @@ class Client():
         # self.sefSessionID = None
         # self.controllerID = None
         # https://stackoverflow.com/questions/43471696/sending-data-to-a-thread-in-python
-        self.sync_resp_queue = queue.Queue()
+        self.sync_connected_queue = queue.Queue()
 
-        self.numberOfImages = 0
+        # self.numberOfImages = 0
         self.debug_image_queue = None
         # self.testimage = 0
 
@@ -136,16 +136,16 @@ class Client():
         self.m_client.on('connected', self.connected)
         self.m_client.on('logged_in', self.on_logged_in)
         self.m_client.connect()
-        while True:
-            try:
-                print("wait for connect response")
-                # time.sleep(0.02)
-                resp = self.sync_resp_queue.get()
-                dprint("get connect resp:{}".format(resp))
-                break
-                # check the queue
-            except KeyboardInterrupt:
-                break
+        # while True:
+        try:
+            print("wait for connect response")
+            # time.sleep(0.02)
+            resp = self.sync_connected_queue.get()
+            dprint("get connect resp:{}".format(resp))
+            # break
+            # check the queue
+        except KeyboardInterrupt:
+            break
 
     # def stop_connection(self):
     #     #TODO: unscribe, logout, close
@@ -161,7 +161,7 @@ class Client():
         #     try:
         #         print("wait for request file resp")
         #         # time.sleep(0.02)
-        #         resp = self.sync_resp_queue.get()
+        #         resp = self.sync_connected_queue.get()
         #         dprint("get request file resp:{}".format(resp))
         #         break
         #         # check the queue
@@ -274,6 +274,8 @@ class Client():
             # will send setSize inside
             self.controllerID = data
             ImageController.parseReigsterViewResp(self.m_client, data)
+            self.sync_connected_queue.put(connect_response)
+
         # elif cmd == command_REQUEST_FILE_LIST:
         #     print("response:REQUEST_FILE_LIST:")
         #     data = fields["data"]
@@ -284,7 +286,7 @@ class Client():
         #     # print("files:{};dir:{}".format(files, rootDir))
         #     self.print_file_list(rootDir, files)
         #     dprint("response:REQUEST_FILE_LIST end")
-        #     self.sync_resp_queue.put("get file list resp")
+        #     self.sync_connected_queue.put("get file list resp")
         # elif cmd == command_SELECT_FILE_TO_OPEN:
         #     print("response:SELECT_FILE_TO_OPEN")
         else:
@@ -335,10 +337,10 @@ class Client():
                     #         dprint("not ipython, so do no show image after saving")
 
                 # global numberOfImages
-                self.numberOfImages += 1
-                if self.numberOfImages == 2:
-                    print("get dummy 2 images")
-                    self.sync_resp_queue.put(connect_response)
+                # self.numberOfImages += 1
+                # if self.numberOfImages == 2:
+                #     print("get dummy 2 images")
+                #     self.sync_connected_queue.put(connect_response)
             elif "cmd" in fields:
                 self.receive_response(fields)
             #2.  remove it, may not be necessary for Browser, just aligh with React JS Browser client
@@ -466,7 +468,7 @@ class Client():
             self.getSession()
         else:
             self.setup_subscription()
-            self.sync_resp_queue.put(connect_response)
+            self.sync_connected_queue.put(connect_response)
         print('connected, try login')
         self.m_client.login(self.user, self.password)
 

@@ -59,8 +59,8 @@ def run_test():
     # c.setup_url("acdc0.asiaa.sinica.edu.tw:47569")
     c.start_connection()
 
-    way1: blocking way to requet file list
-    c.files().request_file_list()
+    # way1: blocking way to requet file list
+    # c.files().request_file_list()
     data = c.files().request_file_list()
     print("get file result:")
     print(data)
