@@ -47,7 +47,7 @@ class FileManager():
         self.print_file_list(rootDir, files)
         dprint("response:REQUEST_FILE_LIST end")
 
-    def request_file_list(self):
+    def request_file_list(self, user_callback = None):
 
         # TODO do not pass session or client directly to this class, later.
         # use the way newMeteorCARTA uses, apiService
@@ -55,6 +55,7 @@ class FileManager():
         dprint("queryServerFileList")
         params = 'path:'
 
-        ApiService.instance().send_command(Commands.REQUEST_FILE_LIST, params, self.query_file_list_callback)
-        print('after send request file list')
+        data = ApiService.instance().send_command(Commands.REQUEST_FILE_LIST, params, self.query_file_list_callback, user_callback)
+        print('after send request file list, return data')
+        return data
         # self.client.call(sendCmd, [Commands.REQUEST_FILE_LIST, params, session.get()], query_file_list_callback)

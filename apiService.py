@@ -35,8 +35,9 @@ class ApiService:
 
     def block_for_user_callback(self):
         print("wait for request file resp")
-        resp = self.sync_resp_queue.get()
-        print("get request file resp:{}".format(resp))
+        data = self.sync_resp_queue.get()
+        print("get request file resp:{}".format(data))
+        return data
 
     # network thread
     def consume_response(self, resp):
@@ -70,11 +71,18 @@ class ApiService:
             built_callback = callback['built_callback']
             built_callback(resp)
             user_callback = callback['user_callback']
+            data = resp["data"]
             if user_callback == None:
-                self.sync_resp_queue.put("unlock blocking send command")
+                self.sync_resp_queue.put(data)
                 print("after unlock ")
             else:
-                user_callback(resp)
+                user_callback(data)
+
+    def send_command_callback(self, error, result):
+        if error:
+            print(error)
+        return
+        print(result)
     # queryServerFileList
     # user thread
     ## Note: 無法開兩個thread, 使用同一個client, 發同步類型的commands, 因為sync_resp_queue無法區別
@@ -93,9 +101,12 @@ class ApiService:
         self.mutex.acquire()
         self.callbacks.append(cmd_dict)
         self.mutex.release()
-        self.client.call(sendCmd, [cmd, parameter, SessionManager.instance().get_session()], self.consume_response)
+        self.client.call(sendCmd, [cmd, parameter, SessionManager.instance().get_session()], self.send_command_callback)
         if user_callback == None:
-            self.block_for_user_callback()
+            data = self.block_for_user_callback()
+            return data
+        else:
+            print("async send command !!!!!")
 
     def __init__(self):
         """ Virtually private constructor. """
