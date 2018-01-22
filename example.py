@@ -59,17 +59,17 @@ def run_test():
     # c.setup_url("acdc0.asiaa.sinica.edu.tw:47569")
     c.start_connection()
 
-    # way1: blocking way to requet file list
-    # c.files().request_file_list()
-    # data = c.files().request_file_list()
-    # print("get file result:")
-    # print(data)
-    # c.request_file_show("aJ.fits")
+    way1: blocking way to requet file list
+    c.files().request_file_list()
+    data = c.files().request_file_list()
+    print("get file result:")
+    print(data)
+    c.request_file_show("aJ.fits")
 
     # way2: non-blocking way to requet file list
-    print("send file list request async")
-    c.files().request_file_list(async_file_list_callback)
-    print("!!! after send async !!!")
+    # print("send file list request async")
+    # c.files().request_file_list(async_file_list_callback)
+    # print("!!! after send async !!!")
 
 def main():
     print("start cartaclient example")
