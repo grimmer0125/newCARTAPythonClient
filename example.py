@@ -61,6 +61,7 @@ def run_test():
 
     # way1: blocking way to requet file list
     # c.files().request_file_list()
+    print("connect ok")
     data = c.files().request_file_list()
     print("get file result:")
     print(data)
@@ -164,7 +165,6 @@ def main():
         d = DebugWorker(run_test)
         d.start()
 
-
         print('before mainloop')
         window.mainloop()
         print('Done')
@@ -173,7 +173,11 @@ def main():
         run_test()
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("KeyboardInterrupt")
+
     # (sort of) hacky way to keep the client alive
     # ctrl + c to kill the script
     # while True:

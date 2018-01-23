@@ -25,8 +25,9 @@ from lib.meteor.MeteorClient import MeteorClient
 # import sessionmanager as SessionManager
 from sessionmanager import SessionManager
 
-import imagecontroller as ImageController
-import filebrowser as FileBrowser
+# import imagecontroller as ImageController
+from imagecontroller import ImageViewer
+# import filebrowser as FileBrowser
 from filebrowser import FileManager
 from apiService import ApiService
 
@@ -34,6 +35,7 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import matplotlib
 import io
+import commands as Commands
 
 dprint("load client.py start")
 
@@ -43,15 +45,15 @@ dprint("load client.py start")
 
 ####  grimmer's experiment
 getSessionCmd = "getSessionId"
-command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
+# command_REGISTER_IMAGEVIEWER = '/CartaObjects/ViewManager:registerView'
 command_SELECT_FILE_TO_OPEN = '/CartaObjects/ViewManager:dataLoaded'
-command_REQUEST_FILE_LIST = '/CartaObjects/DataLoader:getData'
+# command_REQUEST_FILE_LIST = '/CartaObjects/DataLoader:getData'
 GET_IMAGE = 'GET_IMAGE'
 connect_response = "connect_response"
 
-a = 1
-b   = 1 # test python linter function
-print(b)
+# a = 1
+# b   = 1 # test python linter function
+# print(b)
 
 # img = mpimg.imread('2.png')  #3s
 #     # img = mpimg.imread('1.jpg') 3s
@@ -69,7 +71,6 @@ class Client():
     def __init__(self, user, password):
         self.url = 'ws://127.0.0.1:3000/websocket'
         self.m_client = None
-        self.controllerID = None
         self.m_client = None
         self.use_other_session = False
         # SessionManager.instance() = SessionManager()
@@ -98,8 +99,9 @@ class Client():
         # sys.exit()
 
         self.m_client = MeteorClient(self.url)
-        self.controllerID = None
+        # self.controllerID = None
         self.file_manager = FileManager()
+        self.image_viewer = ImageViewer()
         ApiService.instance().set_client(self.m_client)
 
         if run_from_interactive():
@@ -153,6 +155,9 @@ class Client():
     #     #TODO: unscribe, logout, close
     #
 
+    def viewer(self):
+        return self.image_viewer
+
     def files(self):
         return self.file_manager
 
@@ -171,7 +176,7 @@ class Client():
         #         break
 
     def request_file_show(self, file):
-        ImageController.selectFileToOpen(SessionManager.instance().get_session(), self.m_client, self.controllerID, file, self.files().remote_current_folder)
+        self.image_viewer.selectFileToOpen(file, self.file_manager.remote_current_folder)
 
     def subscribed(self, subscription):
         print('* SUBSCRIBED {}'.format(subscription))
@@ -269,13 +274,14 @@ class Client():
         cmd = fields["cmd"]
         print("cmd respone:{}".format(cmd))
 
-        if cmd == command_REGISTER_IMAGEVIEWER:
+        if cmd == Commands.REGISTER_IMAGEVIEWER:
             #1. TODO handle it in new way (below)
             print("response:REGISTER_IMAGEVIEWER")
-            data = fields["data"] # save controllerID to use
-            # will send setSize inside
-            self.controllerID = data
-            ImageController.parseReigsterViewResp(self.m_client, data)
+            # data = fields["data"] # save controllerID to use
+            # # will send setSize inside
+            # # self.controllerID = data
+            # self.image_viewer.set_controllerID(data)
+            # ImageController.parseReigsterViewResp(self.m_client, data)
             self.sync_connected_queue.put(connect_response)
 
         # elif cmd == command_REQUEST_FILE_LIST:
@@ -291,8 +297,8 @@ class Client():
         #     self.sync_connected_queue.put("get file list resp")
         # elif cmd == command_SELECT_FILE_TO_OPEN:
         #     print("response:SELECT_FILE_TO_OPEN")
-        else:
-            ApiService.instance().consume_response(fields)
+        # else:
+        ApiService.instance().consume_response(fields)
 
 
     def handleAddedOrChanged(self, collection, id, fields):
@@ -431,7 +437,8 @@ class Client():
             dprint(error)
         dprint("sub image ok2")
         if self.use_other_session == False:
-            ImageController.sendRegiserView(SessionManager.instance().get_session(), self.m_client)
+            self.image_viewer.sendRegiserView()
+            # ImageController.sendRegiserView(SessionManager.instance().get_session(), self.m_client)
 
     def setup_subscription(self):
         dprint("get:", SessionManager.instance().get_session())

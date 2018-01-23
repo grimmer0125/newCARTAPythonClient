@@ -19,6 +19,8 @@ from helper import *
 from sessionmanager import SessionManager
 sendCmd = 'sendCommand'
 # https://gist.github.com/pazdera/1098129
+
+
 class ApiService:
     # Here will be the instance stored.
     __instance = None
@@ -34,9 +36,9 @@ class ApiService:
         self.client = client
 
     def block_for_user_callback(self):
-        print("wait for request file resp")
+        print("block_for_user_callback")
         data = self.sync_resp_queue.get()
-        print("get request file resp:{}".format(data))
+        print("resp:{}".format(data))
         return data
 
     # network thread
@@ -75,8 +77,11 @@ class ApiService:
             if user_callback == None:
                 self.sync_resp_queue.put(data)
                 print("after unlock ")
-            else:
+            elif user_callback != "":
                 user_callback(data)
+
+    # def dummy_user_callback(self):
+    #     print("it is a dummy user_callback")
 
     def send_command_callback(self, error, result):
         if error:
@@ -86,7 +91,8 @@ class ApiService:
     # queryServerFileList
     # user thread
     ## Note: 無法開兩個thread, 使用同一個client, 發同步類型的commands, 因為sync_resp_queue無法區別
-    def send_command(self, cmd, parameter, built_callback= None, user_callback=None):
+    #TODO, add error with result, now it only handles result
+    def send_command(self, cmd, parameter, built_callback= None, user_callback=""):
         # 有built_callback就先處理它. 然後有user_callback就async,  沒有就直接return result
         # 沒有built_callback就建一個dummmy, 然後裡面再callback user_callback
         # 沒有user_callback就要把self.sync_resp_queue.put
@@ -107,6 +113,13 @@ class ApiService:
             return data
         else:
             print("async send command !!!!!")
+
+    def setup_size_callback(self):
+        print('setup_size_callback')
+
+    def setup_size(self, view_name, width, height):
+        setSizeCmd = 'setupViewSize'
+        self.client.call(setSizeCmd, [view_name, width, height], self.setup_size_callback)
 
     def __init__(self):
         """ Virtually private constructor. """
