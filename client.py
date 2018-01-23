@@ -126,6 +126,7 @@ class Client():
         url = url.replace("localhost", "127.0.0.1")
         self.url = "ws://"+url + "/websocket"
     def start_connection(self):
+        print("start connection")
         # self.m_client = MeteorClient(self.url)
         # self.controllerID = None
         self.m_client.on('removed', self.removed)
@@ -141,11 +142,12 @@ class Client():
             print("wait for connect response")
             # time.sleep(0.02)
             resp = self.sync_connected_queue.get()
-            dprint("get connect resp:{}".format(resp))
+            print("get connect resp:{}".format(resp))
             # break
             # check the queue
         except KeyboardInterrupt:
-            break
+            print("KeyboardInterrupt")
+                # break
 
     # def stop_connection(self):
     #     #TODO: unscribe, logout, close
