@@ -114,7 +114,7 @@ class ApiService:
         else:
             print("async send command !!!!!")
 
-    def setup_size_callback(self):
+    def setup_size_callback(self, error, result):
         print('setup_size_callback')
 
     def setup_size(self, view_name, width, height):
