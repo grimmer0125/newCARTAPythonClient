@@ -3,3 +3,4 @@ pyee==3.0.3
 ws4py==0.4.2
 matplotlib==2.0.2
 python-ddp==0.1.5
+pillow=5.0.0
